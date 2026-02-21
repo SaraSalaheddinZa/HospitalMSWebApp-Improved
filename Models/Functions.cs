@@ -17,7 +17,9 @@ namespace HospitalMSWebApp.Models
 
         public Functions()
         {
-            ConnStr = @"Data Source=Sara\SQLEXP2017;Initial Catalog=HospitalMS-Sara7593-Wasan7639;Integrated Security=True";
+            ConnStr = System.Configuration.ConfigurationManager
+              .ConnectionStrings["HospitalMS-Sara7593-Wasan7639"]
+              .ConnectionString;
             conn = new SqlConnection(ConnStr);
             cmd = new SqlCommand();
             cmd.Connection = conn;

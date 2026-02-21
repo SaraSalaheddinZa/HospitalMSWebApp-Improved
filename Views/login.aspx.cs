@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-using System.Text.RegularExpressions;
 
 namespace HospitalMSWebApp.Views
 {
     public partial class login : System.Web.UI.Page
     {
         Models.Functions conn;
+        string connString = ConfigurationManager.ConnectionStrings["HospitalMS-Sara7593-Wasan7639"].ConnectionString;
         private const int MAX_LOGIN_ATTEMPTS = 5;
         private const int LOCKOUT_DURATION_MINUTES = 15;
 
@@ -74,7 +76,6 @@ namespace HospitalMSWebApp.Views
                     }
                     else
                     {
-                        // Lockout period expired, reset
                         Session["LoginAttempts"] = 0;
                         Session["LockoutTime"] = null;
                         loginBtn.Enabled = true;
@@ -227,7 +228,7 @@ namespace HospitalMSWebApp.Views
         {
             try
             {
-                string query = "SELECT doctorID, doctorName, doctorEmail FROM doctorTbl WHERE doctorEmail='{0}' AND doctorPassword='{1}'"; query = string.Format(query, email, password);
+                string query = "SELECT doctorID, doctorName, doctorEmail FROM doctorTbl WHERE doctorEmail=@email AND doctorPassword=@password";
                 query = string.Format(query, email, password);
                 DataTable dataTbl = conn.GetDatas(query);
 

@@ -89,10 +89,7 @@
         }
 
         .navbar-brand span {
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--white);
         }
 
         .nav-link {
@@ -928,12 +925,10 @@
                         <a href="#features" class="nav-link">Features</a>
                         <a href="#services" class="nav-link">Services</a>
                         <a href="#testimonials" class="nav-link">Testimonials</a>
-                        <a href="../login.aspx" class="btn-nav">
-                            <i class="fas fa-sign-in-alt"></i>Staff Login
+                        <a href="../login.aspx" class="btn-nav">Staff Login
                         </a>
                     </div>
                     <button class="d-md-none btn btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav">
-                        <i class="fas fa-bars"></i>
                     </button>
                 </div>
                 <div class="collapse d-md-none" id="mobileNav">
