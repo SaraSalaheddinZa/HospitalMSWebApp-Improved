@@ -151,6 +151,7 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\Site.css" />
     <Content Include="Content\styles.css" />
+    <Content Include="Content\portal.css" />
     <Content Include="CSS\Login.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
@@ -189,6 +190,7 @@
     <Content Include="Views\ContactAdmin.aspx" />
     <Content Include="Views\Doctors\Prescriptions.aspx" />
     <Content Include="Views\ForgotPassword.aspx" />
+    <Content Include="Views\ResetPassword.aspx" />
     <Content Include="Views\HelpCenter.aspx" />
     <Content Include="Views\Logout.aspx" />
     <Content Include="Views\Support.aspx" />
@@ -254,6 +256,7 @@
     <Content Include="Views\Guest\Home.aspx" />
     <Content Include="Views\Laboratorian\LabTest.aspx" />
     <Content Include="Views\login.aspx" />
+    <Content Include="Views\Portal.aspx" />
     <Content Include="Views\Receptionist\Patients.aspx" />
     <Content Include="Web.config" />
     <Content Include="Bundle.config" />
@@ -262,6 +265,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\BundleConfig.cs" />
+    <Compile Include="App_Code\Infrastructure\AppPage.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="App_Code\Infrastructure\AuditService.cs" />
+    <Compile Include="App_Code\Infrastructure\AuthenticationService.cs" />
+    <Compile Include="App_Code\Infrastructure\Database.cs" />
+    <Compile Include="App_Code\Infrastructure\PasswordSecurity.cs" />
+    <Compile Include="App_Code\Services\HospitalWorkflowService.cs" />
     <Compile Include="About.aspx.cs">
       <DependentUpon>About.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -394,6 +405,14 @@
     <Compile Include="Views\login.aspx.designer.cs">
       <DependentUpon>login.aspx</DependentUpon>
     </Compile>
+    <Compile Include="Views\ResetPassword.aspx.cs">
+      <DependentUpon>ResetPassword.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Views\Portal.aspx.cs">
+      <DependentUpon>Portal.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
     <Compile Include="Views\Logout.aspx.cs">
       <DependentUpon>Logout.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -431,12 +450,12 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="App_Code\" />
     <Folder Include="App_Data\" />
     <Folder Include="Views\Logout\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <Content Include="Database\Migrations\001_GuardianHealth_Core.sql" />
     <Content Include="Scripts\jquery-3.4.1.slim.min.map" />
     <Content Include="Scripts\jquery-3.4.1.min.map" />
     <Content Include="Views\Laboratorian\LaboratorianMaster.Master" />

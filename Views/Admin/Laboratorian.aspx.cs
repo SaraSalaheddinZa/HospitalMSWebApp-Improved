@@ -291,6 +291,13 @@ namespace HospitalMSWebApp.Views.Admin
                 return false;
             }
 
+            string passwordError;
+            if (!string.IsNullOrEmpty(PasswordTb.Value) && !HospitalMSWebApp.Infrastructure.PasswordSecurity.IsAcceptable(PasswordTb.Value, out passwordError))
+            {
+                ShowAlert(passwordError, "error");
+                return false;
+            }
+
             return true;
         }
 
@@ -323,22 +330,13 @@ namespace HospitalMSWebApp.Views.Admin
 
         private string HashPassword(string password)
         {
-            using (SHA256 sha256 = SHA256.Create())
-            {
-                byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                StringBuilder builder = new StringBuilder();
-                for (int i = 0; i < bytes.Length; i++)
-                {
-                    builder.Append(bytes[i].ToString("x2"));
-                }
-                return builder.ToString();
-            }
+            return HospitalMSWebApp.Infrastructure.PasswordSecurity.Hash(password);
         }
 
         private DataTable ExecuteParameterizedQuery(string query, params SqlParameter[] parameters)
         {
             DataTable dt = new DataTable();
-            string connString = System.Configuration.ConfigurationManager.ConnectionStrings["HospitalDB"]?.ConnectionString;
+            string connString = Models.Functions.ConnectionString;
 
             if (string.IsNullOrEmpty(connString))
             {

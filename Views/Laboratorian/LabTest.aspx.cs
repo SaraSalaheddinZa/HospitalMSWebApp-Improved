@@ -279,7 +279,7 @@ namespace HospitalMSWebApp.Views.Laboratorian
         private DataTable ExecuteParameterizedQuery(string query, params SqlParameter[] parameters)
         {
             DataTable dt = new DataTable();
-            string cs = System.Configuration.ConfigurationManager.ConnectionStrings["HospitalDB"]?.ConnectionString;
+            string cs = Models.Functions.ConnectionString;
 
             if (string.IsNullOrEmpty(cs))
             {

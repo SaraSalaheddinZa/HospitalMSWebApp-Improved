@@ -214,7 +214,7 @@ namespace HospitalMSWebApp.Views
         private DataTable ExecuteParameterizedQuery(string query, params SqlParameter[] parameters)
         {
             DataTable dt = new DataTable();
-            string connString = System.Configuration.ConfigurationManager.ConnectionStrings["HospitalDB"]?.ConnectionString;
+            string connString = Models.Functions.ConnectionString;
 
             if (string.IsNullOrEmpty(connString))
             {

@@ -51,7 +51,6 @@
             overflow-x: hidden;
         }
 
-        /* Navigation */
         .navbar {
             position: fixed;
             top: 0;
@@ -84,6 +83,12 @@
             color: var(--primary-color);
         }
 
+        .navbar.scrolled .navbar-brand span {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+}
         .navbar-brand i {
             font-size: 1.8rem;
         }
@@ -133,7 +138,6 @@
             box-shadow: var(--shadow-lg);
         }
 
-        /* Hero Section */
         .hero {
             min-height: 100vh;
             background: var(--gradient-hero);
@@ -929,6 +933,7 @@
                         </a>
                     </div>
                     <button class="d-md-none btn btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav">
+                        <i class="fas fa-bars"></i>
                     </button>
                 </div>
                 <div class="collapse d-md-none" id="mobileNav">

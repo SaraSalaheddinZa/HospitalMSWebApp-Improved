@@ -918,6 +918,9 @@
                             <asp:ListItem Value="Doctor">Doctor</asp:ListItem>
                             <asp:ListItem Value="Receptionist">Receptionist</asp:ListItem>
                             <asp:ListItem Value="Laboratorian">Laboratory Technician</asp:ListItem>
+                            <asp:ListItem Value="Nurse">Nurse</asp:ListItem>
+                            <asp:ListItem Value="Pharmacist">Pharmacist</asp:ListItem>
+                            <asp:ListItem Value="Patient">Patient Portal</asp:ListItem>
                         </asp:DropDownList>
                     </div>
                 </div>

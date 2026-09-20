@@ -1,49 +1,56 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Web;
+using System;
+using System.Configuration;
 using System.Data;
+using System.Data.SqlClient;
 
 namespace HospitalMSWebApp.Models
 {
-    public class Functions
+    /// <summary>
+    /// Compatibility facade for the original Web Forms pages. New code should use
+    /// Database directly and always pass SqlParameter values.
+    /// </summary>
+    public sealed class Functions
     {
-        private SqlConnection conn;
-        private SqlCommand cmd;
-        private DataTable dtb;
-        private string ConnStr;
-        private SqlDataAdapter sda;
-
-        public Functions()
+        public static string ConnectionString
         {
-            ConnStr = System.Configuration.ConfigurationManager
-              .ConnectionStrings["HospitalMS-Sara7593-Wasan7639"]
-              .ConnectionString;
-            conn = new SqlConnection(ConnStr);
-            cmd = new SqlCommand();
-            cmd.Connection = conn;
-        }
-
-        public int SetDatas(string sql)
-        {
-            int cnt = 0;
-            if (conn.State == ConnectionState.Closed)
+            get
             {
-                conn.Open();
+                var variableName = ConfigurationManager.AppSettings["HospitalDbEnvironmentVariable"]
+                    ?? "HOSPITALMS_CONNECTIONSTRING";
+                var value = Environment.GetEnvironmentVariable(variableName);
+                if (!string.IsNullOrWhiteSpace(value)) return value;
+
+                var configured = ConfigurationManager.ConnectionStrings["HospitalDB"];
+                if (configured != null && !string.IsNullOrWhiteSpace(configured.ConnectionString))
+                    return configured.ConnectionString;
+
+                throw new ConfigurationErrorsException(
+                    "No database connection is configured. Set HOSPITALMS_CONNECTIONSTRING in the application environment.");
             }
-            cmd.CommandText = sql;
-            cnt = cmd.ExecuteNonQuery();
-            conn.Close();
-            return cnt;
         }
 
-        public DataTable GetDatas(string Query)
+        public int SetDatas(string sql, params SqlParameter[] parameters)
         {
-            dtb = new DataTable();
-            sda = new SqlDataAdapter(Query, ConnStr);
-            sda.Fill(dtb);
-            return dtb;
+            using (var connection = new SqlConnection(ConnectionString))
+            using (var command = new SqlCommand(sql, connection))
+            {
+                if (parameters != null && parameters.Length > 0) command.Parameters.AddRange(parameters);
+                connection.Open();
+                return command.ExecuteNonQuery();
+            }
+        }
+
+        public DataTable GetDatas(string sql, params SqlParameter[] parameters)
+        {
+            var table = new DataTable();
+            using (var connection = new SqlConnection(ConnectionString))
+            using (var command = new SqlCommand(sql, connection))
+            using (var adapter = new SqlDataAdapter(command))
+            {
+                if (parameters != null && parameters.Length > 0) command.Parameters.AddRange(parameters);
+                adapter.Fill(table);
+            }
+            return table;
         }
     }
 }
