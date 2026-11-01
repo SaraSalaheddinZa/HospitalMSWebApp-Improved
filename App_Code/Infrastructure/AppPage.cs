@@ -12,11 +12,17 @@ namespace HospitalMSWebApp.Infrastructure
         {
             get
             {
-                if (Session["uid"] == null || Session["role"] == null) return null;
-                int id;
-                return int.TryParse(Session["uid"].ToString(), out id)
-                    ? new AuthenticatedUser { UserId = id, Role = Session["role"].ToString(), Name = Convert.ToString(Session["userName"]), Email = Convert.ToString(Session["userEmail"]), PatientId = Session["patientId"] as int? }
-                    : null;
+                int accountId;
+                if (Session["accountId"] == null || Session["role"] == null || !int.TryParse(Session["accountId"].ToString(), out accountId)) return null;
+                int roleEntityId;
+                int patientId;
+                return new AuthenticatedUser
+                {
+                    UserId = accountId,
+                    RoleEntityId = int.TryParse(Convert.ToString(Session["uid"]), out roleEntityId) ? (int?)roleEntityId : null,
+                    Role = Session["role"].ToString(), Name = Convert.ToString(Session["userName"]), Email = Convert.ToString(Session["userEmail"]),
+                    PatientId = int.TryParse(Convert.ToString(Session["patientId"]), out patientId) ? (int?)patientId : null
+                };
             }
         }
 
@@ -25,7 +31,7 @@ namespace HospitalMSWebApp.Infrastructure
             var user = CurrentUser;
             if (user == null || !roles.Contains(user.Role, StringComparer.OrdinalIgnoreCase))
             {
-                FormsAuthentication.SignOut();
+                AuthenticationService.SignOut(Context);
                 Response.Redirect("~/Views/login.aspx?returnUrl=" + Server.UrlEncode(Request.RawUrl), true);
                 return false;
             }

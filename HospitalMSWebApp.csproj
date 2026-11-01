@@ -189,10 +189,16 @@
     <Content Include="Scripts\aos.js" />
     <Content Include="Views\ContactAdmin.aspx" />
     <Content Include="Views\Doctors\Prescriptions.aspx" />
+    <Content Include="Views\Doctors\ClinicalWorkspace.aspx" />
+    <Content Include="Views\Nurse\Workspace.aspx" />
+    <Content Include="Views\Pharmacist\Workspace.aspx" />
+    <Content Include="Database\Migrations\005_Nursing_Workflow.sql" />
+    <Content Include="Database\Migrations\006_Pharmacy_StockMovements.sql" />
     <Content Include="Views\ForgotPassword.aspx" />
     <Content Include="Views\ResetPassword.aspx" />
     <Content Include="Views\HelpCenter.aspx" />
     <Content Include="Views\Logout.aspx" />
+    <Content Include="Views\SignOut.aspx" />
     <Content Include="Views\Support.aspx" />
     <Content Include="WebForm1.aspx" />
     <None Include="Properties\PublishProfiles\sarazamout-001-site1 - FTP.pubxml" />
@@ -269,8 +275,10 @@
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="App_Code\Infrastructure\AuditService.cs" />
+    <Compile Include="App_Code\Infrastructure\ApplicationErrors.cs" />
     <Compile Include="App_Code\Infrastructure\AuthenticationService.cs" />
     <Compile Include="App_Code\Infrastructure\Database.cs" />
+    <Compile Include="App_Code\Infrastructure\DevelopmentDataSeeder.cs" />
     <Compile Include="App_Code\Infrastructure\PasswordSecurity.cs" />
     <Compile Include="App_Code\Services\HospitalWorkflowService.cs" />
     <Compile Include="About.aspx.cs">
@@ -360,6 +368,18 @@
       <DependentUpon>Prescriptions.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
+    <Compile Include="Views\Doctors\ClinicalWorkspace.aspx.cs">
+      <DependentUpon>ClinicalWorkspace.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Views\Nurse\Workspace.aspx.cs">
+      <DependentUpon>Workspace.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Views\Pharmacist\Workspace.aspx.cs">
+      <DependentUpon>Workspace.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
     <Compile Include="Views\Doctors\Prescriptions.aspx.designer.cs">
       <DependentUpon>Prescriptions.aspx</DependentUpon>
     </Compile>
@@ -420,6 +440,10 @@
     <Compile Include="Views\Logout.aspx.designer.cs">
       <DependentUpon>Logout.aspx</DependentUpon>
     </Compile>
+    <Compile Include="Views\SignOut.aspx.cs">
+      <DependentUpon>SignOut.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
     <Compile Include="Views\Receptionist\Patients.aspx.cs">
       <DependentUpon>Patients.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -456,6 +480,9 @@
   <ItemGroup>
     <None Include="packages.config" />
     <Content Include="Database\Migrations\001_GuardianHealth_Core.sql" />
+    <Content Include="Database\Migrations\002_Authentication_Compatibility.sql" />
+    <Content Include="Database\Migrations\003_Patient_Registration_Integrity.sql" />
+    <Content Include="Database\Migrations\004_Doctor_Availability.sql" />
     <Content Include="Scripts\jquery-3.4.1.slim.min.map" />
     <Content Include="Scripts\jquery-3.4.1.min.map" />
     <Content Include="Views\Laboratorian\LaboratorianMaster.Master" />
@@ -500,7 +527,171 @@
     </PropertyGroup>
     <Error Condition="!Exists('packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets'))" />
   </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <ItemGroup>
+    <Compile Include="App_Code\Infrastructure\WorkspacePage.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Content Include="Content\workspaces.css" />
+    <Compile Include="App_Code\Services\WorkspaceWorkflows.cs" />
+    <Content Include="Views\Receptionist\Workspace.aspx" />
+    <Compile Include="Views\Receptionist\Workspace.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Content Include="Views\Laboratorian\Workspace.aspx" />
+    <Compile Include="Views\Laboratorian\Workspace.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Content Include="Database\Migrations\007_Workspace_History.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Admin\Workspace.aspx" />
+    <Compile Include="Views\Admin\Workspace.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Content Include="Views\Patient\Workspace.aspx" />
+    <Compile Include="Views\Patient\Workspace.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Admin\Operations.aspx" />
+    <Compile Include="Views\Admin\Operations.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Content Include="Views\Pharmacist\Suppliers.aspx" />
+    <Compile Include="Views\Pharmacist\Suppliers.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Receptionist\Finance.aspx" />
+    <Compile Include="Views\Receptionist\Finance.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Database\Migrations\008_DocumentContent.sql" />
+    <Content Include="Views\Documents\Index.aspx" />
+    <Compile Include="Views\Documents\Index.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Database\Migrations\009_Triage_Lifecycle.sql" />
+    <Content Include="Views\Nurse\Emergency.aspx" />
+    <Compile Include="Views\Nurse\Emergency.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Content Include="Views\Records\Index.aspx" />
+    <Compile Include="Views\Records\Index.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Content Include="Views\Search\Index.aspx" />
+    <Compile Include="Views\Search\Index.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Notifications\Index.aspx" />
+    <Compile Include="Views\Notifications\Index.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Content Include="Views\Doctors\Results.aspx" />
+    <Compile Include="Views\Doctors\Results.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Database\Migrations\010_Clinical_Addenda.sql" />
+    <Content Include="Views\Doctors\Notes.aspx" />
+    <Compile Include="Views\Doctors\Notes.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Content Include="Views\Admin\Reports.aspx" />
+    <Content Include="Views\Admin\AuditReview.aspx" />
+    <Compile Include="Views\Admin\AuditReview.aspx.cs">
+      <DependentUpon>AuditReview.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="App_Code\Services\Accountability.cs" />
+    <Compile Include="App_Code\Services\OperationalReports.cs" />
+    <Compile Include="App_Code\Infrastructure\CsvExport.cs" />
+    <Compile Include="Views\Admin\ReportDownload.aspx.cs">
+      <DependentUpon>ReportDownload.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Content Include="Views\Admin\ReportDownload.aspx" />
+    <Compile Include="App_Code\Infrastructure\GuardianUi.cs" />
+    <Compile Include="App_Code\Infrastructure\LegacyDirectoryPage.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Content Include="Content\guardian.css" />
+    <Content Include="Content\guardian-public.css" />
+    <Content Include="Content\guardian-cinematic.css" />
+    <Content Include="Scripts\guardian-theme.js" />
+    <Content Include="Scripts\guardian-cinematic.js" />
+    <Content Include="Assets\Images\guardian-heart.png" />
+    <Content Include="Assets\Images\guardian-constellation-atmosphere.png" />
+    <Content Include="Content\guardian-foundation.css" />
+    <Content Include="Assets\Images\guardian-human-care.png" />
+    <Content Include="fonts\Manrope.ttf" />
+    <Content Include="fonts\Manrope-OFL.txt" />
+    <Content Include="Database\Migrations\011_Legacy_Laboratory_Catalog.sql" />
+    <Content Include="Database\Migrations\012_Workflow_Accountability.sql" />
+    <Content Include="Database\Migrations\013_Patient_Timeline.sql" />
+    <Content Include="Database\Migrations\014_Patient360_Events.sql" />
+    <Content Include="Database\Migrations\015_Appointment_Encounter_Integrity.sql" />
+    <Content Include="Database\Migrations\016_Emergency_Admission_Handoff.sql" />
+    <Content Include="Database\Migrations\017_Supplier_Stock_Receipts.sql" />
+    <Content Include="Database\Migrations\018_Laboratory_Result_Amendments.sql" />
+    <Compile Include="App_Code\Services\LaboratoryResults.cs" />
+    <Compile Include="App_Code\Services\StaffDirectory.cs" />
+    <Compile Include="App_Code\Services\StaffProfiles.cs" />
+    <Compile Include="App_Code\Infrastructure\PasswordRecoveryService.cs" />
+    <Content Include="Database\Migrations\019_Password_Recovery_Version.sql" />
+    <Compile Include="App_Code\Services\PatientJourney.cs" />
+    <Compile Include="App_Code\Services\OperationalWorklists.cs" />
+    <Content Include="Views\Admin\CommandCenter.aspx" />
+    <Compile Include="Views\Admin\CommandCenter.aspx.cs">
+      <DependentUpon>CommandCenter.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="App_Code\Infrastructure\PublicRequestPage.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Content Include="Scripts\guardian-public.js" />
+    <Content Include="Content\guardian-auth.css" />
+    <Content Include="Content\guardian-legacy.css" />
+    <Content Include="Scripts\guardian.js" />
+    <Compile Include="Views\Admin\Reports.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="App_Code\Services\MedicalTeam.cs" />
+    <Compile Include="App_Code\Services\PatientAppointments.cs" />
+    <Compile Include="App_Code\Infrastructure\HospitalTime.cs" />
+    <Compile Include="Views\Patient\Appointments.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Content Include="Views\Patient\Appointments.aspx" />
+    <Compile Include="Views\Patient\MedicalTeam.aspx.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Content Include="Views\Patient\MedicalTeam.aspx" />
+    <Content Include="Database\Migrations\020_Medical_Team_Booking.sql" />
+    <Content Include="Database\Migrations\021_Synthetic_Demo_Provenance.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\Public\LivingThread\**\*" />
+  </ItemGroup>
+  <!-- A compiled application DLL is insufficient: Web Forms compiles pages at runtime.
+       The package's copy task uses ContinueOnError; fail the build if its runtime is absent. -->
+  <Target Name="VerifyGuardianRuntimeCompiler" AfterTargets="Build" DependsOnTargets="CopyRoslynCompilerFilesToOutputDirectory" Condition="'$(RoslynCopyToOutDir)' == 'true'">
+    <Error Condition="!Exists('$(RoslynToolsDestinationFolder)\csc.exe')" Text="ASP.NET runtime compiler is missing from the build output. Restore the CodeDom package and rebuild before running the application." />
+    <Error Condition="!Exists('$(RoslynToolsDestinationFolder)\Microsoft.CodeAnalysis.CSharp.dll')" Text="ASP.NET runtime compiler dependencies are missing from the build output." />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

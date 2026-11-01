@@ -1,0 +1,24 @@
+/* Existing Web Forms directories: preserved server controls, unified new presentation. */
+.gh-legacy-form>.container-fluid{padding:0}
+.doc-header,.rec-header,.lab-header,.pat-header{display:flex;justify-content:space-between;align-items:center;border-block:1px solid #d2d6c6;padding:23px 0;margin-bottom:27px;gap:24px}
+.header-text h2{font-size:23px;margin:0 0 8px}.header-text p{color:#68745b;font-size:13px;margin:0}
+.header-icon,.field-ico,.select-arrow,.title-icon,.stat-icon,.field-label i,.search-wrap i,.empty-state i{display:none}
+.header-badges{display:flex;gap:30px}.header-badge{text-align:center}.badge-num{color:#4b459e;font-size:31px;font-weight:550;letter-spacing:-.045em}.badge-label{font-size:11px;color:#6d775d}.stats-strip{display:none}
+.doc-layout,.rec-layout,.lab-layout,.pat-layout{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:25px;align-items:start}
+.form-card,.table-card{background:#fffefa;border:1px solid var(--gh-line);border-radius:10px;min-width:0}
+.form-card{padding:27px}.form-card-title{font-size:21px;font-weight:650;margin-bottom:25px;letter-spacing:-.04em}
+.field-group{margin-bottom:20px}.field-label{font-size:13px;color:#556047;font-weight:650;margin-bottom:6px}.field-row{display:grid;grid-template-columns:1fr 1fr;gap:22px}.field-input,.field-select{width:100%}.divider{border-top:1px solid var(--gh-line);margin:25px 0}
+.btn-row{display:flex;gap:9px;flex-wrap:wrap}.btn-save,.btn-update{background:var(--gh-indigo)}.btn-delete{background:#a42d40!important}
+.table-header{padding:25px;display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap}.table-title{font-size:21px;margin:0}.search-wrap{max-width:280px}
+.table-card .table-responsive{border-top:1px solid var(--gh-line);scrollbar-width:thin}.table-card table{margin:0;font-size:13px;width:100%}.table-card th{padding:15px!important;background:#eeefe7;color:#535f46;font-size:11px;font-weight:650;border-color:#d8deca;text-transform:uppercase;letter-spacing:.04em}.table-card td{padding:17px 15px!important;color:#435238;border-color:#e5e9dc;vertical-align:middle;max-width:250px;overflow-wrap:anywhere;line-height:1.6}.table-card tr:hover td{background:#f3f0fb}
+.spec-chip,.exp-badge{font-size:12px;color:#68618a}.badge-active,.badge-inactive{font-size:11px;font-weight:650;padding:4px 8px;border-radius:4px}.badge-active{background:#eaf3ea;color:#326349}.badge-inactive{background:#eff0e9;color:#5d6357}
+.empty-state{padding:38px;text-align:center;color:#6e795f;font-size:13px}.alert-box:empty{display:none}.alert-box{font-size:13px}.table-card a{font-size:12px}
+.btn-select{background:#eeebfb!important;color:#4b429e!important;padding:7px 12px!important;border:1px solid #d6cfeb!important;border-radius:5px;min-height:34px!important}
+.gh-directory-layout{display:block}.gh-directory-layout>[hidden]{display:none!important}.gh-directory-layout .form-card{display:grid;grid-template-columns:1fr 1fr;gap:0 26px}
+.gh-directory-layout .form-card-title,.gh-directory-layout .alert-box,.gh-directory-layout .btn-row,.gh-directory-layout .divider{grid-column:1/-1}
+.gh-directory-layout .table-card table{min-width:800px}.gh-directory-layout .table-card th{white-space:nowrap}.gh-directory-layout .table-card td{overflow-wrap:normal;min-width:75px}.gh-directory-layout .field-row{grid-column:1/-1}.gh-directory-layout .select-arr{display:none}
+.allergy-chip{display:inline-block;border:1px solid #e1c99b;background:#fff1da;padding:5px 8px;border-radius:4px;color:#80531b;font-size:12px}
+.alert-box.error{background:#fff0f0;border-color:#ebbec6;color:#983347}.alert-box.success{background:#edf5ec;border-color:#cadfc6;color:#3b6541}
+.gh-legacy-form .header-text h2{display:none}.doc-header,.rec-header,.lab-header,.pat-header{padding-block:16px}.gh-legacy-form .header-text p{font-size:14px}
+@media(max-width:1200px){.doc-layout,.rec-layout,.lab-layout,.pat-layout{grid-template-columns:1fr}.form-card{position:static}.gh-legacy-form .field-group{min-width:0}}
+@media(max-width:650px){.doc-header,.rec-header,.lab-header,.pat-header{flex-direction:column;align-items:flex-start}.header-badges{gap:35px}.field-row,.gh-directory-layout .form-card{grid-template-columns:1fr}.form-card,.table-header{padding:21px 18px}.search-wrap{max-width:none;width:100%}.gh-directory-layout .table-card table{min-width:750px}}

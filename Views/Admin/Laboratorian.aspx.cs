@@ -3,15 +3,21 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Security.Cryptography;
 using System.Text;
+using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
 namespace HospitalMSWebApp.Views.Admin
 {
-    public partial class Laboratorian : System.Web.UI.Page
+    public partial class Laboratorian : HospitalMSWebApp.Infrastructure.LegacyDirectoryPage
     {
+        protected override string DirectoryRole { get { return "Admin"; } }
         Models.Functions conn;
-        private int selectedLabId = 0;
+        private int selectedLabId
+        {
+            get { return ViewState["selectedLabId"] == null ? 0 : (int)ViewState["selectedLabId"]; }
+            set { ViewState["selectedLabId"] = value; }
+        }
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -45,7 +51,7 @@ namespace HospitalMSWebApp.Views.Admin
             }
             catch (Exception ex)
             {
-                ShowAlert("Error loading staff: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error loading staff. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -68,150 +74,35 @@ namespace HospitalMSWebApp.Views.Admin
 
         #region CRUD Operations
 
-        protected void addBtn_Click(object sender, EventArgs e)
+        protected void addBtn_Click(object sender, EventArgs e) { SaveDirectoryRecord(false); }
+        protected void editBtn_Click(object sender, EventArgs e) { SaveDirectoryRecord(true); }
+        private void SaveDirectoryRecord(bool update)
         {
+            if (update && selectedLabId == 0) { ShowAlert("Select a staff member to update.", "error"); return; }
+            if (!ValidateInputs(update)) return;
+
             try
             {
-                if (!ValidateInputs())
-                    return;
-
-                string labName = LabNameTb.Value.Trim();
-                string labEmail = EmailTb.Value.Trim().ToLower();
-                string labPassword = HashPassword(PasswordTb.Value);
-                string labPhone = PhoneTb.Value.Trim();
-                string labAddress = LabAddressTb.Value.Trim();
-                string labGender = GenderCb.SelectedValue;
-                string labStatus = StatusCb.SelectedValue;
-
-                if (EmailExists(labEmail))
-                {
-                    ShowAlert("A staff member with this email already exists.", "error");
-                    return;
-                }
-
-                string query = @"INSERT INTO laboratorianTbl (labName, labEmail, labPassword, labPhone, labAddress, labGender, labStatus) 
-                                 VALUES (@Name, @Email, @Password, @Phone, @Address, @Gender, @Status)";
-
-                ExecuteParameterizedQuery(query,
-                    new SqlParameter("@Name", labName),
-                    new SqlParameter("@Email", labEmail),
-                    new SqlParameter("@Password", labPassword),
-                    new SqlParameter("@Phone", labPhone),
-                    new SqlParameter("@Address", labAddress),
-                    new SqlParameter("@Gender", labGender),
-                    new SqlParameter("@Status", labStatus)
-                );
-
-                LoadLaboratorians();
-                LoadStatistics();
-                ClearForm();
-                ShowAlert("Laboratory staff added successfully!", "success");
-            }
-            catch (Exception ex)
-            {
-                ShowAlert("Error adding staff: " + ex.Message, "error");
-            }
-        }
-
-        protected void editBtn_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (selectedLabId == 0)
-                {
-                    ShowAlert("Please select a staff member to update.", "error");
-                    return;
-                }
-
-                if (!ValidateInputs(true))
-                    return;
-
-                string labName = LabNameTb.Value.Trim();
-                string labEmail = EmailTb.Value.Trim().ToLower();
-                string labPhone = PhoneTb.Value.Trim();
-                string labAddress = LabAddressTb.Value.Trim();
-                string labGender = GenderCb.SelectedValue;
-                string labStatus = StatusCb.SelectedValue;
-
-                if (EmailExists(labEmail, selectedLabId))
-                {
-                    ShowAlert("Another staff member with this email already exists.", "error");
-                    return;
-                }
-
-                string query = @"UPDATE laboratorianTbl SET 
-                    labName = @Name, 
-                    labEmail = @Email, 
-                    labPhone = @Phone, 
-                    labAddress = @Address, 
-                    labGender = @Gender, 
-                    labStatus = @Status";
-
-                if (!string.IsNullOrEmpty(PasswordTb.Value))
-                {
-                    query += ", labPassword = @Password";
-                }
-
-                query += " WHERE labID = @ID";
-
-                var parameters = new System.Collections.Generic.List<SqlParameter>
-                {
-                    new SqlParameter("@Name", labName),
-                    new SqlParameter("@Email", labEmail),
-                    new SqlParameter("@Phone", labPhone),
-                    new SqlParameter("@Address", labAddress),
-                    new SqlParameter("@Gender", labGender),
-                    new SqlParameter("@Status", labStatus),
-                    new SqlParameter("@ID", selectedLabId)
+                var entry = new HospitalMSWebApp.Services.StaffDirectoryEntry {
+                    Role="Laboratorian",Id=update?(int?)selectedLabId:null,Name=LabNameTb.Value,Email=EmailTb.Value,Phone=PhoneTb.Value,Address=LabAddressTb.Value,Gender=GenderCb.SelectedValue,Status=StatusCb.SelectedValue,Password=PasswordTb.Value,ConfirmEmailChange=Request.Form["confirmLoginEmail"]=="on",ConfirmPasswordChange=Request.Form["confirmPasswordChange"]=="on"
                 };
-
-                if (!string.IsNullOrEmpty(PasswordTb.Value))
-                {
-                    parameters.Add(new SqlParameter("@Password", HashPassword(PasswordTb.Value)));
-                }
-
-                ExecuteParameterizedQuery(query, parameters.ToArray());
-
-                LoadLaboratorians();
-                LoadStatistics();
-                ClearForm();
-                ShowAlert("Staff member updated successfully!", "success");
+                new HospitalMSWebApp.Services.HospitalWorkflowService().SaveStaffDirectoryEntry(entry,CurrentUser.UserId);
+                LoadLaboratorians(); LoadStatistics(); ClearForm();
+                ShowAlert("Staff profile and sign-in access saved.", "success");
             }
-            catch (Exception ex)
-            {
-                ShowAlert("Error updating staff: " + ex.Message, "error");
-            }
+            catch (ArgumentException ex) { ShowAlert(ex.Message, "error"); }
+            catch (Exception ex) { ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex,"The staff profile could not be saved. Check the email and selected record, then retry."),"error"); }
         }
-
         protected void deleteBtn_Click(object sender, EventArgs e)
         {
+            if (selectedLabId == 0) { ShowAlert("Select a staff member to deactivate.", "error"); return; }
             try
             {
-                if (selectedLabId == 0)
-                {
-                    ShowAlert("Please select a staff member to delete.", "error");
-                    return;
-                }
-
-                if (HasAssociatedRecords(selectedLabId))
-                {
-                    ShowAlert("Cannot delete staff member with associated lab tests. Consider setting status to Inactive instead.", "error");
-                    return;
-                }
-
-                string query = "DELETE FROM laboratorianTbl WHERE labID = @ID";
-                ExecuteParameterizedQuery(query, new SqlParameter("@ID", selectedLabId));
-
-                LoadLaboratorians();
-                LoadStatistics();
-                ClearForm();
-                selectedLabId = 0;
-                ShowAlert("Staff member deleted successfully!", "success");
+                new HospitalMSWebApp.Services.HospitalWorkflowService().SetDirectoryStaffActive("Laboratorian",selectedLabId,false,CurrentUser.UserId);
+                LoadLaboratorians(); LoadStatistics(); ClearForm();
+                ShowAlert("Staff access deactivated. Historical records were retained.","success");
             }
-            catch (Exception ex)
-            {
-                ShowAlert("Error deleting staff: " + ex.Message, "error");
-            }
+            catch (Exception ex) { ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex,"Staff access could not be changed. Refresh the directory and retry."),"error"); }
         }
 
         protected void clearBtn_Click(object sender, EventArgs e)
@@ -244,7 +135,7 @@ namespace HospitalMSWebApp.Views.Admin
             }
             catch (Exception ex)
             {
-                ShowAlert("Error loading staff details: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error loading staff details. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -338,21 +229,14 @@ namespace HospitalMSWebApp.Views.Admin
             DataTable dt = new DataTable();
             string connString = Models.Functions.ConnectionString;
 
-            if (string.IsNullOrEmpty(connString))
-            {
-                string modifiedQuery = query;
-                foreach (var param in parameters)
-                {
-                    modifiedQuery = modifiedQuery.Replace(param.ParameterName, $"'{param.Value}'");
-                }
-                return conn.GetDatas(modifiedQuery);
-            }
+            if (string.IsNullOrEmpty(connString)) throw new InvalidOperationException("Database configuration is unavailable.");
 
             using (SqlConnection connection = new SqlConnection(connString))
             {
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
                     command.Parameters.AddRange(parameters);
+                    Models.Functions.OpenConfiguredConnection(connection);
                     SqlDataAdapter adapter = new SqlDataAdapter(command);
                     adapter.Fill(dt);
                 }
@@ -364,7 +248,7 @@ namespace HospitalMSWebApp.Views.Admin
         private void ShowAlert(string message, string type)
         {
             string icon = type == "success" ? "check-circle" : "exclamation-circle";
-            alertBox.InnerHtml = $"<i class='fas fa-{icon}'></i> {message}";
+            alertBox.InnerHtml = $"<i class='fas fa-{icon}'></i> {HttpUtility.HtmlEncode(message)}";
             alertBox.Attributes["class"] = $"alert alert-{type} show";
         }
 

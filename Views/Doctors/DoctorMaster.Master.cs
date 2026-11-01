@@ -9,6 +9,8 @@ namespace HospitalMSWebApp.Views.Doctors
 {
     public partial class DoctorMaster : System.Web.UI.MasterPage
     {
+        protected string ShellOpen(){return HospitalMSWebApp.Infrastructure.GuardianUi.MasterBody("Clinical care");}
+        protected string ShellClose(){return HospitalMSWebApp.Infrastructure.GuardianUi.End();}
         protected void Page_Load(object sender, EventArgs e)
         {
 

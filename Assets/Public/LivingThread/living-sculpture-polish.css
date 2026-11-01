@@ -1,0 +1,35 @@
+/* Final, bounded polish: aura material and native Staff role select only. */
+:root{--aura-pearl:rgba(255,245,224,.82);--aura-rose:rgba(234,172,185,.63);--aura-lilac:rgba(188,172,222,.55)}
+:root[data-theme=dark]{--aura-pearl:rgba(249,209,224,.72);--aura-rose:rgba(211,142,181,.64);--aura-lilac:rgba(151,148,212,.59)}
+/* Prior bounds: 116% stage width × 86% height. New: 154% × 114%.
+   Approximately 33% larger on each axis; not an enlargement of the form. */
+.sculpture-aura,[data-field-focus=true] .sculpture-aura{inset:-7% -27%;opacity:1;background:none;border-radius:50%;pointer-events:none;z-index:0;transition:none}
+.sculpture-aura>span{position:absolute;inset:0;border-radius:50%;pointer-events:none}
+.aura-halo{background:radial-gradient(ellipse at 55% 48%,var(--aura-rose),transparent 66%);opacity:.42;transform:scale(.98);animation:aura-radiance 22s ease-in-out infinite alternate}
+.aura-core{inset:12%!important;background:radial-gradient(ellipse at 65% 30%,var(--aura-pearl),transparent 55%),radial-gradient(ellipse at 34% 65%,var(--aura-lilac),transparent 62%);opacity:.32;animation:aura-breathe 16s ease-in-out infinite alternate}
+.aura-shimmer{inset:8%!important;background:radial-gradient(ellipse at 75% 32%,var(--aura-pearl),transparent 36%),radial-gradient(ellipse at 25% 73%,var(--aura-rose),transparent 43%);opacity:.26;animation:aura-drift 28s ease-in-out infinite alternate}
+.aura-focus{background:radial-gradient(ellipse,var(--aura-pearl),transparent 62%);opacity:0}
+@keyframes aura-radiance{from{opacity:.36;transform:scale(.98)}to{opacity:.49;transform:scale(1.035)}}
+@keyframes aura-breathe{from{opacity:.26}to{opacity:.40}}
+@keyframes aura-drift{from{opacity:.19;transform:translate(-7px,3px) rotate(-1deg)}to{opacity:.31;transform:translate(8px,-5px) rotate(1deg)}}
+[data-page-hidden=true] .sculpture-aura>span{animation-play-state:paused}
+[data-motion=static] .sculpture-aura>span{animation:none!important;transform:none!important}
+/* Keep a native select for keyboard, assistive technology and OS picker support. */
+[data-theme=dark] .role-field select{
+ appearance:none;-webkit-appearance:none;
+ background-color:rgba(30,27,43,.81);
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='m5 8 5 5 5-5' fill='none' stroke='%23f0d5eb' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+ background-repeat:no-repeat;background-size:20px;background-position:right 15px center;
+ color:#fff3f9;border:1px solid rgba(211,179,215,.49);padding-right:46px;
+ box-shadow:inset 0 1px 1px rgba(246,217,240,.12),0 2px 9px rgba(13,11,24,.12);
+ transition:background-color .25s,border-color .25s,box-shadow .25s;
+}
+[data-theme=dark] .role-field select:required:invalid{color:#dbccdf}
+[data-theme=dark] .role-field select:hover{background-color:rgba(53,43,66,.92);border-color:#bfa0c5;box-shadow:inset 0 1px rgba(249,221,243,.16)}
+[data-theme=dark] .role-field select:focus{background-color:#332a41;border-color:#ecc5e2;outline:2px solid #d5a8cb;outline-offset:3px;box-shadow:0 0 0 6px rgba(204,153,193,.10),inset 0 1px rgba(255,229,246,.18)}
+[data-theme=dark] .role-field select[aria-invalid=true]{border-color:var(--danger)}
+[data-theme=dark] .role-field option{color:#fff3f9;background:#2e273a;padding:10px}
+[data-theme=dark] .role-field option:checked{color:#fff8fc;background:#60465f}
+@media(max-width:800px){.aura-halo{animation-duration:26s}.aura-shimmer{animation-duration:32s}}
+@media(prefers-reduced-motion:reduce){.sculpture-aura>span{animation:none!important;transform:none!important}}
+@media(forced-colors:active){[data-theme=dark] .role-field select{appearance:auto;background:Canvas;color:CanvasText;border:1px solid CanvasText}}

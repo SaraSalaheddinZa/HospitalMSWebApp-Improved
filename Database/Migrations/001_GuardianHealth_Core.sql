@@ -2,6 +2,18 @@
    Apply to the existing HospitalMS database once, using an account permitted to create tables.
    The script extends legacy patient/doctor tables instead of dropping or renaming them. */
 SET XACT_ABORT ON;
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
+IF OBJECT_ID(N'gh.UserAccounts', N'U') IS NOT NULL
+BEGIN
+    PRINT 'Guardian Health core migration already applied.';
+    SET NOEXEC ON;
+END;
 BEGIN TRANSACTION;
 
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = N'gh') EXEC(N'CREATE SCHEMA gh');
@@ -18,9 +30,11 @@ IF COL_LENGTH('dbo.patientTbl', 'IsActive') IS NULL
 IF COL_LENGTH('dbo.patientTbl', 'registeredAt') IS NULL
     ALTER TABLE dbo.patientTbl ADD registeredAt datetime2(0) NOT NULL CONSTRAINT DF_patientTbl_registeredAt DEFAULT SYSUTCDATETIME();
 
+GO
+
 ;WITH sourceRows AS
 (
-    SELECT patientId, ROW_NUMBER() OVER (PARTITION BY MedicalRecordNumber ORDER BY patientId) AS duplicateNumber
+    SELECT patientId, MedicalRecordNumber, ROW_NUMBER() OVER (PARTITION BY MedicalRecordNumber ORDER BY patientId) AS duplicateNumber
     FROM dbo.patientTbl WHERE MedicalRecordNumber IS NOT NULL
 )
 UPDATE sourceRows SET MedicalRecordNumber = NULL WHERE duplicateNumber > 1;
@@ -198,7 +212,7 @@ CREATE TABLE gh.Appointments
     CONSTRAINT FK_Appointments_Department FOREIGN KEY (DepartmentId) REFERENCES gh.Departments(DepartmentId),
     CONSTRAINT FK_Appointments_BookedBy FOREIGN KEY (BookedByUserId) REFERENCES gh.UserAccounts(UserId)
 );
-CREATE UNIQUE INDEX UX_Appointments_DoctorSlot ON gh.Appointments(DoctorId, ScheduledStart) WHERE Status NOT IN ('Cancelled','NoShow');
+CREATE UNIQUE INDEX UX_Appointments_DoctorSlot ON gh.Appointments(DoctorId, ScheduledStart) WHERE Status <> 'Cancelled' AND Status <> 'NoShow';
 CREATE INDEX IX_Appointments_Patient ON gh.Appointments(PatientId, ScheduledStart DESC);
 CREATE INDEX IX_Appointments_Day ON gh.Appointments(DoctorId, ScheduledStart, Status);
 
@@ -534,4 +548,6 @@ AS
     UNION ALL SELECT e.PatientId, e.StartedAt, 'Encounter', ISNULL(e.ChiefComplaint, 'Clinical encounter') FROM gh.Encounters e
     UNION ALL SELECT a.PatientId, a.ScheduledStart, 'Appointment', ISNULL(a.Reason, a.Status) FROM gh.Appointments a
     UNION ALL SELECT l.PatientId, l.OrderedAt, 'Laboratory order', l.Status FROM gh.LabOrders l;
+GO
+SET NOEXEC OFF;
 GO

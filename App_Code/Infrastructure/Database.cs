@@ -23,7 +23,7 @@ namespace HospitalMSWebApp.Infrastructure
             using (var command = new SqlCommand(sql, connection))
             {
                 if (parameters != null && parameters.Length > 0) command.Parameters.AddRange(parameters);
-                connection.Open();
+                Functions.OpenConfiguredConnection(connection);
                 return command.ExecuteScalar();
             }
         }
@@ -32,7 +32,7 @@ namespace HospitalMSWebApp.Infrastructure
         {
             using (var connection = new SqlConnection(Functions.ConnectionString))
             {
-                connection.Open();
+                Functions.OpenConfiguredConnection(connection);
                 using (var transaction = connection.BeginTransaction(IsolationLevel.Serializable))
                 {
                     try
@@ -43,7 +43,7 @@ namespace HospitalMSWebApp.Infrastructure
                     }
                     catch
                     {
-                        transaction.Rollback();
+                        if (transaction.Connection != null) transaction.Rollback();
                         throw;
                     }
                 }

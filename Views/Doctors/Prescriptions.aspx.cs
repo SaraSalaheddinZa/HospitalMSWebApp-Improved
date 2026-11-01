@@ -57,7 +57,7 @@ namespace HospitalMSWebApp.Views.Doctors
             }
             catch (Exception ex)
             {
-                ShowAlert("Error loading prescriptions: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error loading prescriptions. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -75,7 +75,7 @@ namespace HospitalMSWebApp.Views.Doctors
             }
             catch (Exception ex)
             {
-                ShowAlert("Error loading patients: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error loading patients. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -93,7 +93,7 @@ namespace HospitalMSWebApp.Views.Doctors
             }
             catch (Exception ex)
             {
-                ShowAlert("Error loading lab tests: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error loading lab tests. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -187,7 +187,7 @@ namespace HospitalMSWebApp.Views.Doctors
             }
             catch (Exception ex)
             {
-                ShowAlert("Error saving prescription: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error saving prescription. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 

@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using HospitalMSWebApp.Infrastructure;
+using HospitalMSWebApp.Services;
 
 namespace HospitalMSWebApp.Views.Receptionist
 {
-    public partial class Patients : System.Web.UI.Page
+    public partial class Patients : LegacyDirectoryPage
     {
+        protected override string DirectoryRole { get { return "Receptionist"; } }
         Models.Functions conn;
+        private readonly HospitalWorkflowService workflows = new HospitalWorkflowService();
 
         private int selectedPatientId
         {
@@ -18,11 +23,7 @@ namespace HospitalMSWebApp.Views.Receptionist
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (Session["role"] == null || Session["role"].ToString() != "Receptionist")
-            {
-                Response.Redirect("../login.aspx");
-                return;
-            }
+            if (!RequireRoles("Receptionist")) return;
 
             conn = new Models.Functions();
 
@@ -40,14 +41,14 @@ namespace HospitalMSWebApp.Views.Receptionist
         {
             try
             {
-                string query = "SELECT patientId, patientName, patientPhone, patientGender, patientDOB, patientAdd, patientAllergies FROM patientTbl ORDER BY patientName";
+                string query = "SELECT patientId, MedicalRecordNumber, patientName, patientPhone, patientGender, patientDOB, patientAdd, patientAllergies FROM patientTbl WHERE IsActive=1 ORDER BY patientName";
                 DataTable dt = conn.GetDatas(query);
                 PatientListGV.DataSource = dt;
                 PatientListGV.DataBind();
             }
             catch (Exception ex)
             {
-                ShowAlert("Error loading patients: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error loading patients. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -55,11 +56,11 @@ namespace HospitalMSWebApp.Views.Receptionist
         {
             try
             {
-                string totalQuery = "SELECT COUNT(*) FROM patientTbl";
+                string totalQuery = "SELECT COUNT(*) FROM patientTbl WHERE IsActive=1";
                 DataTable totalDt = conn.GetDatas(totalQuery);
                 totalPatients.InnerText = totalDt.Rows[0][0].ToString();
 
-                string todayQuery = "SELECT COUNT(*) FROM patientTbl WHERE CAST(registeredAt AS DATE) = CAST(GETDATE() AS DATE)";
+                string todayQuery = "SELECT COUNT(*) FROM patientTbl WHERE IsActive=1 AND CAST(registeredAt AS DATE) = CAST(GETDATE() AS DATE)";
                 try
                 {
                     DataTable todayDt = conn.GetDatas(todayQuery);
@@ -91,27 +92,16 @@ namespace HospitalMSWebApp.Views.Receptionist
                 if (!ValidateInputs())
                     return;
 
-                string userId = Session["uid"]?.ToString() ?? "0";
                 string name = PatNameTb.Value.Trim();
                 string phone = PhoneTb.Value.Trim();
                 string gender = GenderCb.SelectedValue;
-                string dob = DOBTb.Value;
                 string address = AddressTb.Value.Trim();
                 string allergies = AllergyTb.Value.Trim();
-
-                string query = @"INSERT INTO patientTbl 
-                    (patientName, patientPhone, patientGender, patientDOB, patientAdd, patientAllergies, addBy) 
-                    VALUES (@Name, @Phone, @Gender, @DOB, @Address, @Allergies, @AddBy)";
-
-                ExecuteParameterizedQuery(query,
-                    new SqlParameter("@Name", name),
-                    new SqlParameter("@Phone", phone),
-                    new SqlParameter("@Gender", gender),
-                    new SqlParameter("@DOB", string.IsNullOrEmpty(dob) ? (object)DBNull.Value : DateTime.Parse(dob)),
-                    new SqlParameter("@Address", address),
-                    new SqlParameter("@Allergies", allergies),
-                    new SqlParameter("@AddBy", int.TryParse(userId, out int uid) ? uid : 0)
-                );
+                var receptionistId = CurrentUser == null ? 0 : CurrentUser.RoleEntityId.GetValueOrDefault();
+                if (receptionistId < 1) throw new InvalidOperationException("Your account is not linked to a receptionist profile.");
+                var patientId = workflows.RegisterPatient(name, phone, gender, ParseDate(DOBTb.Value), address, allergies,
+                    null, null, null, null, null, receptionistId);
+                AuditService.Write(CurrentUser, "PatientCreated", "Patient", patientId.ToString(), "Patient registered from receptionist workspace", Request);
 
                 LoadPatients();
                 LoadStatistics();
@@ -120,7 +110,7 @@ namespace HospitalMSWebApp.Views.Receptionist
             }
             catch (Exception ex)
             {
-                ShowAlert("Error registering patient: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error registering patient. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -140,28 +130,10 @@ namespace HospitalMSWebApp.Views.Receptionist
                 string name = PatNameTb.Value.Trim();
                 string phone = PhoneTb.Value.Trim();
                 string gender = GenderCb.SelectedValue;
-                string dob = DOBTb.Value;
                 string address = AddressTb.Value.Trim();
                 string allergies = AllergyTb.Value.Trim();
-
-                string query = @"UPDATE patientTbl SET 
-                    patientName      = @Name,
-                    patientPhone     = @Phone,
-                    patientGender    = @Gender,
-                    patientDOB       = @DOB,
-                    patientAdd       = @Address,
-                    patientAllergies = @Allergies
-                    WHERE patientId  = @ID";
-
-                ExecuteParameterizedQuery(query,
-                    new SqlParameter("@Name", name),
-                    new SqlParameter("@Phone", phone),
-                    new SqlParameter("@Gender", gender),
-                    new SqlParameter("@DOB", string.IsNullOrEmpty(dob) ? (object)DBNull.Value : DateTime.Parse(dob)),
-                    new SqlParameter("@Address", address),
-                    new SqlParameter("@Allergies", allergies),
-                    new SqlParameter("@ID", selectedPatientId)
-                );
+                workflows.UpdatePatientBasic(selectedPatientId, name, phone, gender, ParseDate(DOBTb.Value), address, allergies);
+                AuditService.Write(CurrentUser, "PatientUpdated", "Patient", selectedPatientId.ToString(), "Patient demographics updated from receptionist workspace", Request);
 
                 LoadPatients();
                 LoadStatistics();
@@ -170,7 +142,7 @@ namespace HospitalMSWebApp.Views.Receptionist
             }
             catch (Exception ex)
             {
-                ShowAlert("Error updating patient: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error updating patient. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -180,21 +152,21 @@ namespace HospitalMSWebApp.Views.Receptionist
             {
                 if (selectedPatientId == 0)
                 {
-                    ShowAlert("Please select a patient to delete.", "error");
+                    ShowAlert("Please select a patient to deactivate.", "error");
                     return;
                 }
 
-                string query = "DELETE FROM patientTbl WHERE patientId = @ID";
-                ExecuteParameterizedQuery(query, new SqlParameter("@ID", selectedPatientId));
+                workflows.DeactivatePatient(selectedPatientId);
+                AuditService.Write(CurrentUser, "PatientDeactivated", "Patient", selectedPatientId.ToString(), "Patient record deactivated from receptionist workspace", Request);
 
                 LoadPatients();
                 LoadStatistics();
                 ClearForm();
-                ShowAlert("Patient deleted successfully!", "success");
+                ShowAlert("Patient deactivated. Historical records have been preserved.", "success");
             }
             catch (Exception ex)
             {
-                ShowAlert("Error deleting patient: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error deactivating patient. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -230,7 +202,7 @@ namespace HospitalMSWebApp.Views.Receptionist
             }
             catch (Exception ex)
             {
-                ShowAlert("Error loading patient details: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error loading patient details. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -264,7 +236,20 @@ namespace HospitalMSWebApp.Views.Receptionist
                 return false;
             }
 
+            DateTime date;
+            if (!string.IsNullOrEmpty(DOBTb.Value) && (!DateTime.TryParse(DOBTb.Value, out date) || date.Date > DateTime.UtcNow.Date))
+            {
+                ShowAlert("Enter a valid date of birth.", "error");
+                return false;
+            }
+
             return true;
+        }
+
+        private static DateTime? ParseDate(string value)
+        {
+            DateTime date;
+            return DateTime.TryParse(value, out date) ? (DateTime?)date : null;
         }
 
         private DataTable ExecuteParameterizedQuery(string query, params SqlParameter[] parameters)
@@ -272,18 +257,13 @@ namespace HospitalMSWebApp.Views.Receptionist
             DataTable dt = new DataTable();
             string connString = Models.Functions.ConnectionString;
 
-            if (string.IsNullOrEmpty(connString))
-            {
-                string modifiedQuery = query;
-                foreach (var param in parameters)
-                    modifiedQuery = modifiedQuery.Replace(param.ParameterName, $"'{param.Value}'");
-                return conn.GetDatas(modifiedQuery);
-            }
+            if (string.IsNullOrEmpty(connString)) throw new InvalidOperationException("Database configuration is unavailable.");
 
             using (SqlConnection connection = new SqlConnection(connString))
             using (SqlCommand command = new SqlCommand(query, connection))
             {
                 command.Parameters.AddRange(parameters);
+                Models.Functions.OpenConfiguredConnection(connection);
                 new SqlDataAdapter(command).Fill(dt);
             }
 
@@ -293,7 +273,7 @@ namespace HospitalMSWebApp.Views.Receptionist
         private void ShowAlert(string message, string type)
         {
             string icon = type == "success" ? "check-circle" : "exclamation-circle";
-            alertBox.InnerHtml = $"<i class='fas fa-{icon}'></i> {message}";
+            alertBox.InnerHtml = $"<i class='fas fa-{icon}'></i> {HttpUtility.HtmlEncode(message)}";
             alertBox.Attributes["class"] = $"alert-box show {type}";
         }
 

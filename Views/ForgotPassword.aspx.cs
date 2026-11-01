@@ -1,26 +1,26 @@
 using System;
-using System.Data;
+using System.Configuration;
 using System.Net;
 using System.Net.Mail;
-using System.Security.Cryptography;
-using System.Text;
 using System.Web;
 using System.Web.UI;
 using HospitalMSWebApp.Infrastructure;
 
 namespace HospitalMSWebApp.Views
 {
-    public partial class ForgotPassword : Page
+    public partial class ForgotPassword : PublicRequestPage
     {
-        private readonly Database database = new Database();
-
         protected void Page_Load(object sender, EventArgs e)
         {
+            Response.Cache.SetCacheability(HttpCacheability.NoCache);
+            Response.Cache.SetNoStore();
+            Response.Headers["Referrer-Policy"] = "no-referrer";
             if (!IsPostBack) alertBox.Attributes["class"] = "alert";
         }
 
         protected void submitBtn_Click(object sender, EventArgs e)
         {
+            if (!ConsumeSubmission()) { ShowAlert("This request was already submitted or has expired. Refresh and try again.", "error"); return; }
             var email = emailTb.Text.Trim();
             var role = roleCb.SelectedValue;
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrEmpty(role))
@@ -31,12 +31,11 @@ namespace HospitalMSWebApp.Views
 
             try
             {
-                var user = FindAccount(email, role);
+                var user = new PasswordRecoveryService().RequestReset(email, role, Request.UserHostAddress);
                 if (user != null)
                 {
-                    var token = GenerateToken();
-                    SaveToken(user.UserId, token);
-                    SendResetEmail(user.Email, user.Name, token);
+                    try { SendResetEmail(user.Email, user.Name, user.Token); }
+                    catch (Exception ex) { PasswordRecoveryService.ReportFailure("delivery", ex); }
                 }
                 // The response stays identical to prevent account enumeration.
                 ShowAlert("If an active account matches those details, password-reset instructions will be sent shortly.", "success");
@@ -44,30 +43,11 @@ namespace HospitalMSWebApp.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Trace.TraceError("Password reset request failed: " + ex);
-                ShowAlert("We could not process that request. Please try again later.", "error");
+                PasswordRecoveryService.ReportFailure("request", ex);
+                // Never reveal whether only the matching-account branch failed.
+                ShowAlert("If an active account matches those details, password-reset instructions will be sent shortly.", "success");
+                ClearForm();
             }
-        }
-
-        private ResetUser FindAccount(string email, string role)
-        {
-            var accounts = database.Query(@"SELECT TOP (1) UserId, DisplayName, Email FROM gh.UserAccounts
-                WHERE NormalizedEmail = @Email AND RoleName = @Role AND IsActive = 1",
-                Database.Parameter("@Email", email.ToUpperInvariant()), Database.Parameter("@Role", role));
-            if (accounts.Rows.Count == 0) return null;
-            return new ResetUser
-            {
-                UserId = Convert.ToInt32(accounts.Rows[0]["UserId"]), Name = Convert.ToString(accounts.Rows[0]["DisplayName"]), Email = Convert.ToString(accounts.Rows[0]["Email"])
-            };
-        }
-
-        private void SaveToken(int userId, string token)
-        {
-            database.Execute("UPDATE gh.PasswordResetTokens SET UsedAt = SYSUTCDATETIME() WHERE UserId = @UserId AND UsedAt IS NULL",
-                Database.Parameter("@UserId", userId));
-            database.Execute(@"INSERT INTO gh.PasswordResetTokens(UserId, TokenHash, ExpiresAt, RequestedIp)
-                VALUES(@UserId, @TokenHash, DATEADD(MINUTE, 30, SYSUTCDATETIME()), @Ip)", Database.Parameter("@UserId", userId),
-                Database.Parameter("@TokenHash", TokenHash(token)), Database.Parameter("@Ip", Request.UserHostAddress));
         }
 
         private bool SendResetEmail(string email, string name, string token)
@@ -78,7 +58,13 @@ namespace HospitalMSWebApp.Views
             if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password)) return false;
             int port;
             if (!int.TryParse(System.Configuration.ConfigurationManager.AppSettings["SmtpPort"], out port)) port = 587;
-            var resetUrl = Request.Url.Scheme + "://" + Request.Url.Authority + ResolveUrl("~/Views/ResetPassword.aspx") + "?token=" + HttpUtility.UrlEncode(token);
+            Uri origin;
+            var configuredOrigin=Environment.GetEnvironmentVariable("HOSPITALMS_PUBLIC_ORIGIN")??ConfigurationManager.AppSettings["PublicOrigin"];
+            if(!Uri.TryCreate(configuredOrigin,UriKind.Absolute,out origin)||origin.Scheme!=Uri.UriSchemeHttps||!string.IsNullOrEmpty(origin.UserInfo)||origin.AbsolutePath!="/"||!string.IsNullOrEmpty(origin.Query)||!string.IsNullOrEmpty(origin.Fragment)){
+                System.Diagnostics.Trace.TraceError("Password reset email requires a configured HTTPS HOSPITALMS_PUBLIC_ORIGIN (origin only).");
+                return false;
+            }
+            var resetUrl = origin.GetLeftPart(UriPartial.Authority) + ResolveUrl("~/Views/ResetPassword.aspx") + "?token=" + HttpUtility.UrlEncode(token);
             using (var message = new MailMessage())
             {
                 message.From = new MailAddress(username, "Guardian Health");
@@ -96,22 +82,11 @@ namespace HospitalMSWebApp.Views
             return true;
         }
 
-        private static string GenerateToken()
-        {
-            var bytes = new byte[32];
-            using (var random = RandomNumberGenerator.Create()) random.GetBytes(bytes);
-            return Convert.ToBase64String(bytes).Replace('+', '-').Replace('/', '_').TrimEnd('=');
-        }
-        internal static byte[] TokenHash(string token)
-        {
-            using (var hash = SHA256.Create()) return hash.ComputeHash(Encoding.UTF8.GetBytes(token));
-        }
         private void ShowAlert(string message, string type)
         {
             alertBox.InnerText = message;
             alertBox.Attributes["class"] = "alert alert-" + type + " show";
         }
         private void ClearForm() { emailTb.Text = ""; roleCb.SelectedIndex = 0; }
-        private sealed class ResetUser { public int UserId; public string Name; public string Email; }
     }
 }

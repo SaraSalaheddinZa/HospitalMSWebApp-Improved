@@ -18,17 +18,17 @@ namespace HospitalMSWebApp.Infrastructure
                     Database.Parameter("@EntityId", entityId), Database.Parameter("@Detail", detail),
                     Database.Parameter("@IpAddress", GetClientIp(request)));
             }
-            catch (SqlException)
+            catch (SqlException ex)
             {
-                // Auditing must never prevent a clinical transaction when a migration has not yet run.
+                // Clinical workflow history is transactional; report failure of this supplementary request log.
+                System.Diagnostics.Trace.TraceError("Audit event persistence failed: "+ex.Message);
             }
         }
 
         private static string GetClientIp(HttpRequest request)
         {
             if (request == null) return null;
-            var forwarded = request.Headers["X-Forwarded-For"];
-            if (!string.IsNullOrEmpty(forwarded)) return forwarded.Split(',')[0].Trim();
+            // Never trust a client-supplied forwarding header without a configured trusted proxy.
             return request.UserHostAddress;
         }
     }

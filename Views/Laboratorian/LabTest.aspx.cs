@@ -46,7 +46,7 @@ namespace HospitalMSWebApp.Views.Laboratorian
             }
             catch (Exception ex)
             {
-                ShowAlert("Error loading tests: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error loading tests. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -114,7 +114,7 @@ namespace HospitalMSWebApp.Views.Laboratorian
             }
             catch (Exception ex)
             {
-                ShowAlert("Error adding test: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error adding test. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -153,7 +153,7 @@ namespace HospitalMSWebApp.Views.Laboratorian
             }
             catch (Exception ex)
             {
-                ShowAlert("Error updating test: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error updating test. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -185,7 +185,7 @@ namespace HospitalMSWebApp.Views.Laboratorian
             }
             catch (Exception ex)
             {
-                ShowAlert("Error deleting test: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error deleting test. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -213,7 +213,7 @@ namespace HospitalMSWebApp.Views.Laboratorian
             }
             catch (Exception ex)
             {
-                ShowAlert("Error loading test details: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error loading test details. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 

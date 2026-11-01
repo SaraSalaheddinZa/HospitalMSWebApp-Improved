@@ -1,0 +1,16 @@
+/* Web Forms adaptation only. Approved design layers remain unchanged and public-only. */
+.living-auth .feedback:empty{display:none}
+.living-auth .feedback{scroll-margin-block:6rem}
+.living-auth input.sign-in-button{display:block;width:100%;text-align:center;cursor:pointer;font:inherit;font-weight:700;border:0;appearance:none}
+.living-auth input.sign-in-button:disabled{cursor:not-allowed;opacity:.6}
+.living-auth .sign-in-control{position:relative}
+.living-auth .sign-in-control>.button-arrow{position:absolute;right:24px;top:50%;transform:translateY(-50%);color:var(--button-ink);pointer-events:none}
+.living-auth .remember>span{display:flex;align-items:center;gap:8px}
+.living-auth .remember label{cursor:pointer}
+.living-auth .text-control{display:inline-block}
+.living-auth .role-field[hidden]{display:none}
+.living-auth .role-slot{height:auto}
+.living-auth .role-slot:has(.role-field[hidden]){display:none}
+.home-page .public-empty{padding:1.5rem 0;line-height:1.7}
+.home-page .public-contact-detail{font-size:.85rem;line-height:1.6}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}}

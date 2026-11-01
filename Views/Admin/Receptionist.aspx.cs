@@ -5,12 +5,16 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using System.Web;
+using HospitalMSWebApp.Services;
 
 namespace HospitalMSWebApp.Views.Admin
 {
-    public partial class Receptionist : System.Web.UI.Page
+    public partial class Receptionist : HospitalMSWebApp.Infrastructure.LegacyDirectoryPage
     {
+        protected override string DirectoryRole { get { return "Admin"; } }
         Models.Functions conn;
+        private readonly HospitalWorkflowService workflows = new HospitalWorkflowService();
         private int selectedRecId
         {
             get { return ViewState["selectedRecId"] != null ? (int)ViewState["selectedRecId"] : 0; }
@@ -48,7 +52,7 @@ namespace HospitalMSWebApp.Views.Admin
             }
             catch (Exception ex)
             {
-                ShowAlert("Error loading receptionists: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error loading receptionists. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -71,145 +75,35 @@ namespace HospitalMSWebApp.Views.Admin
 
         #region CRUD Operations
 
-        protected void addBtn_Click(object sender, EventArgs e)
+        protected void addBtn_Click(object sender, EventArgs e) { SaveDirectoryRecord(false); }
+        protected void editBtn_Click(object sender, EventArgs e) { SaveDirectoryRecord(true); }
+        private void SaveDirectoryRecord(bool update)
         {
+            if (update && selectedRecId == 0) { ShowAlert("Select a staff member to update.", "error"); return; }
+            if (!ValidateInputs(update)) return;
+
             try
             {
-                if (!ValidateInputs())
-                    return;
-
-                string recName = RecNameTb.Value.Trim();
-                string recEmail = RecEmailTb.Value.Trim().ToLower();
-                string recPassword = HashPassword(PasswordTb.Value);
-                string recPhone = PhoneTb.Value.Trim();
-                string recAddress = AddressTb.Value.Trim();
-                string recStatus = StatusCb.SelectedValue;
-
-                if (EmailExists(recEmail))
-                {
-                    ShowAlert("A receptionist with this email already exists.", "error");
-                    return;
-                }
-
-                string query = @"INSERT INTO receptionistTbl (receptionistName, receptionistEmail, receptionistPassword, receptionistPhone, receptionistAdd, receptionistStatus) 
-                                 VALUES (@Name, @Email, @Password, @Phone, @Address, @Status)";
-
-                ExecuteParameterizedQuery(query,
-                    new SqlParameter("@Name", recName),
-                    new SqlParameter("@Email", recEmail),
-                    new SqlParameter("@Password", recPassword),
-                    new SqlParameter("@Phone", recPhone),
-                    new SqlParameter("@Address", recAddress),
-                    new SqlParameter("@Status", recStatus)
-                );
-
-                LoadReceptionists();
-                LoadStatistics();
-                ClearForm();
-                ShowAlert("Receptionist added successfully!", "success");
-            }
-            catch (Exception ex)
-            {
-                ShowAlert("Error adding receptionist: " + ex.Message, "error");
-            }
-        }
-
-        protected void editBtn_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (selectedRecId == 0)
-                {
-                    ShowAlert("Please select a receptionist to update.", "error");
-                    return;
-                }
-
-                if (!ValidateInputs(true))
-                    return;
-
-                string recName = RecNameTb.Value.Trim();
-                string recEmail = RecEmailTb.Value.Trim().ToLower();
-                string recPhone = PhoneTb.Value.Trim();
-                string recAddress = AddressTb.Value.Trim();
-                string recStatus = StatusCb.SelectedValue;
-
-                if (EmailExists(recEmail, selectedRecId))
-                {
-                    ShowAlert("Another receptionist with this email already exists.", "error");
-                    return;
-                }
-
-                string query = @"UPDATE receptionistTbl SET 
-                    receptionistName = @Name, 
-                    receptionistEmail = @Email, 
-                    receptionistPhone = @Phone, 
-                    receptionistAdd = @Address, 
-                    receptionistStatus = @Status";
-
-                if (!string.IsNullOrEmpty(PasswordTb.Value))
-                {
-                    query += ", receptionistPassword = @Password";
-                }
-
-                query += " WHERE receptionistID = @ID";
-
-                var parameters = new System.Collections.Generic.List<SqlParameter>
-                {
-                    new SqlParameter("@Name", recName),
-                    new SqlParameter("@Email", recEmail),
-                    new SqlParameter("@Phone", recPhone),
-                    new SqlParameter("@Address", recAddress),
-                    new SqlParameter("@Status", recStatus),
-                    new SqlParameter("@ID", selectedRecId)
+                var entry = new HospitalMSWebApp.Services.StaffDirectoryEntry {
+                    Role="Receptionist",Id=update?(int?)selectedRecId:null,Name=RecNameTb.Value,Email=RecEmailTb.Value,Phone=PhoneTb.Value,Address=AddressTb.Value,Status=StatusCb.SelectedValue,Password=PasswordTb.Value,ConfirmEmailChange=Request.Form["confirmLoginEmail"]=="on",ConfirmPasswordChange=Request.Form["confirmPasswordChange"]=="on"
                 };
-
-                if (!string.IsNullOrEmpty(PasswordTb.Value))
-                {
-                    parameters.Add(new SqlParameter("@Password", HashPassword(PasswordTb.Value)));
-                }
-
-                ExecuteParameterizedQuery(query, parameters.ToArray());
-
-                LoadReceptionists();
-                LoadStatistics();
-                ClearForm();
-                ShowAlert("Receptionist updated successfully!", "success");
+                new HospitalMSWebApp.Services.HospitalWorkflowService().SaveStaffDirectoryEntry(entry,CurrentUser.UserId);
+                LoadReceptionists(); LoadStatistics(); ClearForm();
+                ShowAlert("Staff profile and sign-in access saved.", "success");
             }
-            catch (Exception ex)
-            {
-                ShowAlert("Error updating receptionist: " + ex.Message, "error");
-            }
+            catch (ArgumentException ex) { ShowAlert(ex.Message, "error"); }
+            catch (Exception ex) { ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex,"The staff profile could not be saved. Check the email and selected record, then retry."),"error"); }
         }
-
         protected void deleteBtn_Click(object sender, EventArgs e)
         {
+            if (selectedRecId == 0) { ShowAlert("Select a staff member to deactivate.", "error"); return; }
             try
             {
-                if (selectedRecId == 0)
-                {
-                    ShowAlert("Please select a receptionist to delete.", "error");
-                    return;
-                }
-
-                if (HasAssociatedRecords(selectedRecId))
-                {
-                    ShowAlert("Cannot delete receptionist with associated records. Consider setting status to Inactive instead.", "error");
-                    return;
-                }
-
-                string query = "DELETE FROM receptionistTbl WHERE receptionistID = @ID";
-                ExecuteParameterizedQuery(query, new SqlParameter("@ID", selectedRecId));
-
-                LoadReceptionists();
-                LoadStatistics();
-                ClearForm();
-                selectedRecId = 0;
-                ShowAlert("Receptionist deleted successfully!", "success");
+                new HospitalMSWebApp.Services.HospitalWorkflowService().SetDirectoryStaffActive("Receptionist",selectedRecId,false,CurrentUser.UserId);
+                LoadReceptionists(); LoadStatistics(); ClearForm();
+                ShowAlert("Staff access deactivated. Historical records were retained.","success");
             }
-            catch (Exception ex)
-            {
-                ShowAlert("Error deleting receptionist: " + ex.Message, "error");
-            }
+            catch (Exception ex) { ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex,"Staff access could not be changed. Refresh the directory and retry."),"error"); }
         }
 
         protected void clearBtn_Click(object sender, EventArgs e)
@@ -241,7 +135,7 @@ namespace HospitalMSWebApp.Views.Admin
             }
             catch (Exception ex)
             {
-                ShowAlert("Error loading receptionist details: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error loading receptionist details. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -312,11 +206,11 @@ namespace HospitalMSWebApp.Views.Admin
 
         private bool HasAssociatedRecords(int recId)
         {
-            string apptQuery = "SELECT COUNT(*) FROM appointmentTbl WHERE receptionistID = @ID";
+            string apptQuery = "SELECT COUNT(*) FROM appointmentTbl WHERE createdBy = @ID";
             DataTable apptDt = ExecuteParameterizedQuery(apptQuery, new SqlParameter("@ID", recId));
             if (Convert.ToInt32(apptDt.Rows[0][0]) > 0) return true;
 
-            string patientQuery = "SELECT COUNT(*) FROM patientTbl WHERE registeredBy = @ID";
+            string patientQuery = "SELECT COUNT(*) FROM patientTbl WHERE addBy = @ID";
             DataTable patientDt = ExecuteParameterizedQuery(patientQuery, new SqlParameter("@ID", recId));
             if (Convert.ToInt32(patientDt.Rows[0][0]) > 0) return true;
 
@@ -333,20 +227,14 @@ namespace HospitalMSWebApp.Views.Admin
             DataTable dt = new DataTable();
             string connString = Models.Functions.ConnectionString;
 
-            if (string.IsNullOrEmpty(connString))
-            {
-                // Fallback: use conn.GetDatas with inline values (dev only)
-                string modifiedQuery = query;
-                foreach (var param in parameters)
-                    modifiedQuery = modifiedQuery.Replace(param.ParameterName, $"'{param.Value}'");
-                return conn.GetDatas(modifiedQuery);
-            }
+            if (string.IsNullOrEmpty(connString)) throw new InvalidOperationException("Database configuration is unavailable.");
 
             using (SqlConnection connection = new SqlConnection(connString))
             {
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
                     command.Parameters.AddRange(parameters);
+                    Models.Functions.OpenConfiguredConnection(connection);
                     SqlDataAdapter adapter = new SqlDataAdapter(command);
                     adapter.Fill(dt);
                 }
@@ -359,7 +247,7 @@ namespace HospitalMSWebApp.Views.Admin
         private void ShowAlert(string message, string type)
         {
             string icon = type == "success" ? "check-circle" : "exclamation-circle";
-            alertBox.InnerHtml = $"<i class='fas fa-{icon}'></i> {message}";
+            alertBox.InnerHtml = $"<i class='fas fa-{icon}'></i> {HttpUtility.HtmlEncode(message)}";
             alertBox.Attributes["class"] = $"alert-box show {type}";
         }
 

@@ -18,7 +18,7 @@ namespace HospitalMSWebApp.Views
                 int id;
                 var actor = new AuthenticatedUser
                 {
-                    UserId = int.TryParse(Convert.ToString(Session["uid"]), out id) ? id : 0,
+                    UserId = int.TryParse(Convert.ToString(Session["accountId"]), out id) ? id : 0,
                     Role = Convert.ToString(Session["role"]), Name = Convert.ToString(Session["userName"])
                 };
                 if (actor.UserId > 0)

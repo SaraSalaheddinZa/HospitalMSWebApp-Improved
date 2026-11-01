@@ -20,6 +20,12 @@ namespace HospitalMSWebApp.Views
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!RequireRoles("Admin", "Doctor", "Receptionist", "Laboratorian", "Nurse", "Pharmacist", "Patient")) return;
+            if(CurrentUser!=null)
+            {
+                Response.Redirect(WorkspaceNavigation.Destination(CurrentUser.Role,Request.QueryString["module"]),false);
+                Context.ApplicationInstance.CompleteRequest();
+                return;
+            }
             module = NormalizeModule(Request.QueryString["module"]);
             if (!CanOpen(module)) { Response.Redirect("Portal.aspx?module=dashboard", false); Context.ApplicationInstance.CompleteRequest(); return; }
             csrf = Convert.ToString(Session["PortalCsrf"]);
@@ -29,6 +35,7 @@ namespace HospitalMSWebApp.Views
 
         protected override void Render(HtmlTextWriter writer)
         {
+            if(Response.IsRequestBeingRedirected)return;
             writer.Write(BuildDocument());
         }
 
@@ -41,8 +48,9 @@ namespace HospitalMSWebApp.Views
                 if (action == "savePatient" && Can("Admin", "Receptionist"))
                 {
                     var gender = Required("gender");
+                    var receptionistId = Can("Receptionist") ? CurrentUser.RoleEntityId : null;
                     var patientId = workflows.RegisterPatient(Required("name"), Required("phone"), gender, Date("birthDate"), Value("address"),
-                        Value("allergies"), Value("email"), Value("emergencyName"), Value("emergencyPhone"), Value("bloodType"), Value("conditions"), CurrentUser.UserId);
+                        Value("allergies"), Value("email"), Value("emergencyName"), Value("emergencyPhone"), Value("bloodType"), Value("conditions"), receptionistId);
                     AuditService.Write(CurrentUser, "PatientCreated", "Patient", patientId.ToString(), "New patient registered", Request);
                     Redirect("Patient registered with a Guardian Health MRN."); return;
                 }
@@ -63,6 +71,13 @@ namespace HospitalMSWebApp.Views
                     AuditService.Write(CurrentUser, "AppointmentCheckedIn", "Appointment", id.ToString(), "Patient checked in", Request);
                     Redirect("Patient checked in."); return;
                 }
+                if (action == "saveDoctorSchedule" && Can("Admin"))
+                {
+                    var scheduleId = workflows.AddDoctorSchedule(Integer("doctorId"), NullableInteger("departmentId"), RequiredDate("scheduleDate"),
+                        RequiredTime("startTime"), RequiredTime("endTime"), Integer("slotMinutes"));
+                    AuditService.Write(CurrentUser, "DoctorScheduleCreated", "DoctorSchedule", scheduleId.ToString(), "Clinician availability published", Request);
+                    Redirect("Clinician availability published."); return;
+                }
                 if (action == "cancelAppointment" && Can("Admin", "Receptionist", "Patient"))
                 {
                     var id = Long("appointmentId");
@@ -74,9 +89,18 @@ namespace HospitalMSWebApp.Views
                     AuditService.Write(CurrentUser, "AppointmentCancelled", "Appointment", id.ToString(), "Appointment cancelled", Request);
                     Redirect("Appointment cancellation recorded."); return;
                 }
+                if (action == "markNotificationRead" && Can("Patient"))
+                {
+                    var notificationId = Long("notificationId");
+                    database.Execute("UPDATE gh.Notifications SET ReadAt=SYSUTCDATETIME() WHERE NotificationId=@Id AND UserId=@UserId AND ReadAt IS NULL",
+                        Database.Parameter("@Id", notificationId), Database.Parameter("@UserId", CurrentUser.UserId));
+                    Redirect("Notification marked as read."); return;
+                }
                 if (action == "saveEncounter" && Can("Doctor"))
                 {
-                    var encounterId = workflows.RecordEncounter(Integer("patientId"), CurrentUser.UserId, NullableLong("appointmentId"), Value("complaint"), Value("assessment"),
+                    var doctorId = CurrentUser.RoleEntityId.GetValueOrDefault();
+                    if (doctorId < 1) throw new InvalidOperationException("Your account is not linked to a doctor profile.");
+                    var encounterId = workflows.RecordEncounter(Integer("patientId"), doctorId, NullableLong("appointmentId"), Value("complaint"), Value("assessment"),
                         Value("plan"), Date("followUp"), Decimal("temperature"), NullableInteger("pulse"), NullableInteger("systolic"), NullableInteger("diastolic"),
                         Value("diagnosis"), NullableInteger("medicationId"), Value("dose"), Value("frequency"), Decimal("quantity"), NullableInteger("labTestId"));
                     AuditService.Write(CurrentUser, "EncounterCreated", "Encounter", encounterId.ToString(), "Clinical note and orders recorded", Request);
@@ -102,6 +126,12 @@ namespace HospitalMSWebApp.Views
                     AuditService.Write(CurrentUser, "StockReceived", "MedicationBatch", null, "Medication stock received", Request);
                     Redirect("Medication batch received into inventory."); return;
                 }
+                if (action == "dispensePrescription" && Can("Admin", "Pharmacist"))
+                {
+                    workflows.DispensePrescriptionItem(Long("prescriptionItemId"), Long("medicationBatchId"), RequiredDecimal("quantity"), CurrentUser.UserId);
+                    AuditService.Write(CurrentUser, "PrescriptionDispensed", "PrescriptionItem", Value("prescriptionItemId"), "Medication dispensed from controlled stock", Request);
+                    Redirect("Medication dispensing recorded."); return;
+                }
                 if (action == "createInvoice" && Can("Admin", "Receptionist"))
                 {
                     var invoiceId = workflows.CreateInvoice(Integer("patientId"), Required("description"), RequiredDecimal("amount"), Date("dueDate"));
@@ -114,6 +144,39 @@ namespace HospitalMSWebApp.Views
                     workflows.TakePayment(invoiceId, RequiredDecimal("amount"), Required("method"), Value("reference"), CurrentUser.UserId);
                     AuditService.Write(CurrentUser, "PaymentReceived", "Invoice", invoiceId.ToString(), "Payment received", Request);
                     Redirect("Payment recorded."); return;
+                }
+                if (action == "recordTriage" && Can("Admin", "Receptionist", "Nurse"))
+                {
+                    var triageId = workflows.RecordTriage(Integer("patientId"), Integer("acuity"), Required("complaint"), CurrentUser.UserId);
+                    AuditService.Write(CurrentUser, "TriageRecorded", "TriageAssessment", triageId.ToString(), "Emergency triage assessment recorded", Request);
+                    Redirect("Triage assessment recorded."); return;
+                }
+                if (action == "admitPatient" && Can("Admin", "Receptionist", "Nurse"))
+                {
+                    var admissionId = workflows.AdmitPatient(Integer("patientId"), Integer("bedId"), NullableInteger("doctorId"), Value("reason"));
+                    AuditService.Write(CurrentUser, "PatientAdmitted", "Admission", admissionId.ToString(), "Patient admitted to an inpatient bed", Request);
+                    Redirect("Patient admitted."); return;
+                }
+                if (action == "dischargePatient" && Can("Admin", "Receptionist", "Nurse"))
+                {
+                    var admissionId = Long("admissionId"); workflows.DischargePatient(admissionId, Value("summary"));
+                    AuditService.Write(CurrentUser, "PatientDischarged", "Admission", admissionId.ToString(), "Patient discharged", Request);
+                    Redirect("Patient discharged; the bed is now marked for cleaning."); return;
+                }
+                if (action == "addWard" && Can("Admin"))
+                {
+                    var id = workflows.AddWard(Required("name"), Required("wardType"), NullableInteger("departmentId"));
+                    AuditService.Write(CurrentUser, "WardCreated", "Ward", id.ToString(), "Ward configured", Request); Redirect("Ward created."); return;
+                }
+                if (action == "addRoom" && Can("Admin"))
+                {
+                    var id = workflows.AddRoom(Integer("wardId"), Required("roomNumber"), Required("roomType"));
+                    AuditService.Write(CurrentUser, "RoomCreated", "Room", id.ToString(), "Room configured", Request); Redirect("Room created."); return;
+                }
+                if (action == "addBed" && Can("Admin"))
+                {
+                    var id = workflows.AddBed(Integer("roomId"), Required("bedNumber"));
+                    AuditService.Write(CurrentUser, "BedCreated", "Bed", id.ToString(), "Bed configured", Request); Redirect("Bed created."); return;
                 }
                 if (action == "addDepartment" && Can("Admin"))
                 {
@@ -171,7 +234,7 @@ namespace HospitalMSWebApp.Views
             if (Can("Admin", "Receptionist", "Nurse")) Nav(page, "operations", "Operations", "▤");
             if (Can("Admin")) { Nav(page, "admin", "Administration", "⚙"); Nav(page, "reports", "Reports", "▥"); }
             if (!Can("Patient")) Nav(page, "search", "Global search", "⌕");
-            page.Append("</nav><a class='signout' href='Logout.aspx'>Sign out</a></aside><main class='workspace'><header class='topbar'><div><p class='eyebrow'>GUARDIAN HEALTH HOSPITAL</p><h1>").Append(H(ModuleTitle())).Append("</h1></div><div class='user-chip'><span>").Append(H(CurrentUser.Name)).Append("</span><small>").Append(H(CurrentUser.Email)).Append("</small></div></header>");
+            page.Append("</nav><a class='signout' href='SignOut.aspx'>Sign out</a></aside><main class='workspace'><header class='topbar'><div><p class='eyebrow'>GUARDIAN HEALTH HOSPITAL</p><h1>").Append(H(ModuleTitle())).Append("</h1></div><div class='user-chip'><span>").Append(H(CurrentUser.Name)).Append("</span><small>").Append(H(CurrentUser.Email)).Append("</small></div></header>");
             var notice = Request.QueryString["notice"]; var error = Request.QueryString["error"];
             if (!string.IsNullOrEmpty(notice)) page.Append("<div class='notice success'>✓ ").Append(H(notice)).Append("</div>");
             if (!string.IsNullOrEmpty(error)) page.Append("<div class='notice error'>! ").Append(H(error)).Append("</div>");
@@ -253,12 +316,24 @@ namespace HospitalMSWebApp.Views
                     .Append(Input("Start", "start", true, "datetime-local")).Append(Input("End", "end", true, "datetime-local")).Append(Input("Reason for visit", "reason", false)).Append(Submit("Book appointment")).Append("</form></section>");
             }
             if (Can("Admin", "Receptionist", "Nurse")) sb.Append("<section class='panel compact'><h2>Check in a booked patient</h2><form method='post' class='inline-form'>").Append(Hidden("checkIn")).Append(Input("Appointment ID", "appointmentId", true, "number")).Append(Submit("Check in")).Append("</form></section>");
+            int availabilityDoctorId;
+            DateTime availabilityDate;
+            if (int.TryParse(ValueQuery("doctorId"), out availabilityDoctorId) && availabilityDoctorId > 0 && DateTime.TryParse(ValueQuery("date"), out availabilityDate))
+            {
+                var slots = database.Query("EXEC gh.GetAvailableDoctorSlots @DoctorId, @ScheduleDate", Database.Parameter("@DoctorId", availabilityDoctorId), Database.Parameter("@ScheduleDate", availabilityDate.Date));
+                sb.Append("<section class='panel'><div class='panel-head'><div><h2>Available appointment slots</h2><p>Live availability after existing bookings are excluded.</p></div></div>").Append(Table(slots)).Append("</section>");
+            }
+            sb.Append("<section class='panel compact'><h2>Find clinician availability</h2><form method='get' class='form-grid'>")
+                .Append("<input type='hidden' name='module' value='appointments'>")
+                .Append(Options("Clinician", "doctorId", "SELECT doctorID AS Id, doctorName AS Name FROM dbo.doctorTbl WHERE doctorStatus='Active' ORDER BY doctorName", true))
+                .Append(Input("Date", "date", true, "date")).Append(Submit("Show available slots")).Append("</form></section>");
             return sb.ToString();
         }
 
         private string RenderClinical()
         {
-            var doctorId = CurrentUser.UserId;
+            var doctorId = CurrentUser.RoleEntityId.GetValueOrDefault();
+            if (doctorId < 1) return "<section class='panel'>" + Empty("Your doctor account is not linked to a clinical staff record. Please contact an administrator.") + "</section>";
             var encounters = database.Query(@"SELECT TOP (40) e.EncounterId AS [ID], p.MedicalRecordNumber AS [MRN], p.patientName AS [Patient], e.ChiefComplaint AS [Chief complaint],
                 CONVERT(varchar(16),e.StartedAt,120) AS [Started], e.Status FROM gh.Encounters e JOIN dbo.patientTbl p ON p.patientId=e.PatientId WHERE e.DoctorId=@DoctorId ORDER BY e.StartedAt DESC", Database.Parameter("@DoctorId", doctorId));
             var sb = new StringBuilder("<section class='panel'><div class='panel-head'><div><h2>Recent consultations</h2><p>Only your encounters are shown.</p></div></div>").Append(Table(encounters)).Append("</section>");
@@ -277,7 +352,7 @@ namespace HospitalMSWebApp.Views
         {
             var labItems = database.Query(@"SELECT TOP (100) i.LabOrderItemId AS [ID], p.MedicalRecordNumber AS [MRN], p.patientName AS [Patient], c.TestName AS [Test],
                 i.ResultStatus AS [Status], i.ResultValue AS [Result], i.ResultFlag AS [Flag], CONVERT(varchar(16),o.OrderedAt,120) AS [Ordered]
-                FROM gh.LabOrderItems i JOIN gh.LabOrders o ON o.LabOrderId=i.LabOrderId JOIN dbo.patientTbl p ON p.patientId=o.PatientId JOIN gh.LabCatalog c ON c.LabTestId=i.LabTestId
+                FROM gh.vwLabResults i JOIN gh.LabOrders o ON o.LabOrderId=i.LabOrderId JOIN dbo.patientTbl p ON p.patientId=o.PatientId JOIN gh.LabCatalog c ON c.LabTestId=i.LabTestId
                 ORDER BY CASE WHEN i.ResultStatus='Pending' THEN 0 ELSE 1 END, o.OrderedAt DESC");
             var sb = new StringBuilder("<section class='panel'><div class='panel-head'><div><h2>Laboratory worklist</h2><p>Pending and completed orders from the clinical system.</p></div></div>").Append(Table(labItems)).Append("</section>");
             if (Can("Laboratorian")) sb.Append("<section class='panel compact'><h2>Finalize laboratory result</h2><form method='post' class='form-grid'>").Append(Hidden("resultLab"))
@@ -291,11 +366,24 @@ namespace HospitalMSWebApp.Views
             var stock = database.Query(@"SELECT TOP (100) m.MedicationName AS [Medication], b.BatchNumber AS [Batch], CONVERT(varchar(10),b.ExpirationDate,23) AS [Expires],
                 b.QuantityOnHand AS [On hand], b.MinimumStock AS [Minimum], CASE WHEN b.QuantityOnHand <= b.MinimumStock THEN 'Low stock' WHEN b.ExpirationDate < DATEADD(day,30,CAST(SYSUTCDATETIME() AS date)) THEN 'Near expiry' ELSE 'In stock' END AS [Alert]
                 FROM gh.MedicationBatches b JOIN gh.MedicationCatalog m ON m.MedicationId=b.MedicationId ORDER BY b.ExpirationDate");
+            var queue = database.Query(@"SELECT TOP (100) pi.PrescriptionItemId AS [Item ID], p.MedicalRecordNumber AS [MRN], p.patientName AS [Patient],
+                m.MedicationName AS [Medication], pi.Dose, pi.Frequency, pi.Quantity-ISNULL(SUM(d.Quantity),0) AS [Remaining], po.Status
+                FROM gh.PrescriptionItems pi JOIN gh.PrescriptionOrders po ON po.PrescriptionOrderId=pi.PrescriptionOrderId
+                JOIN dbo.patientTbl p ON p.patientId=po.PatientId JOIN gh.MedicationCatalog m ON m.MedicationId=pi.MedicationId
+                LEFT JOIN gh.Dispensations d ON d.PrescriptionItemId=pi.PrescriptionItemId
+                WHERE po.Status IN ('Pending','PartiallyDispensed') GROUP BY pi.PrescriptionItemId,p.MedicalRecordNumber,p.patientName,m.MedicationName,pi.Dose,pi.Frequency,pi.Quantity,po.Status,po.PrescribedAt
+                HAVING pi.Quantity-ISNULL(SUM(d.Quantity),0)>0 ORDER BY po.PrescribedAt");
             var sb = new StringBuilder("<section class='panel'><div class='panel-head'><div><h2>Pharmacy inventory</h2><p>Batch-level stock and expiration monitoring.</p></div></div>").Append(Table(stock)).Append("</section>");
+            sb.Append("<section class='panel'><div class='panel-head'><div><h2>Prescription queue</h2><p>Dispense only from a matching, in-date medication batch.</p></div></div>").Append(Table(queue)).Append("</section>");
             sb.Append("<section class='split'><div class='panel compact'><h2>Add medication</h2><form method='post' class='form-grid'>").Append(Hidden("addMedication"))
                 .Append(Input("Code", "code", true)).Append(Input("Medication name", "name", true)).Append(Input("Form", "form", false)).Append(Input("Strength", "strength", false)).Append(Input("Unit price", "price", false, "number", "step='0.01'")).Append(Submit("Add medication")).Append("</form></div>")
                 .Append("<div class='panel compact'><h2>Receive stock</h2><form method='post' class='form-grid'>").Append(Hidden("receiveStock")).Append(Options("Medication", "medicationId", "SELECT MedicationId AS Id, MedicationName AS Name FROM gh.MedicationCatalog WHERE IsActive=1 ORDER BY MedicationName", true))
                 .Append(Input("Batch number", "batch", true)).Append(Input("Expiration", "expiration", true, "date")).Append(Input("Quantity", "quantity", true, "number", "step='0.01'")).Append(Input("Minimum stock", "minimum", false, "number", "step='0.01'")).Append(Input("Unit cost", "unitCost", false, "number", "step='0.01'")).Append(Submit("Receive stock")).Append("</form></div></section>");
+            sb.Append("<section class='panel compact'><h2>Dispense prescription</h2><form method='post' class='form-grid'>").Append(Hidden("dispensePrescription"))
+                .Append(Input("Prescription item ID", "prescriptionItemId", true, "number"))
+                .Append(Options("Medication batch", "medicationBatchId", @"SELECT b.MedicationBatchId AS Id, m.MedicationName + ' — batch ' + b.BatchNumber + ' (' + CONVERT(varchar(20),b.QuantityOnHand) + ')' AS Name
+                    FROM gh.MedicationBatches b JOIN gh.MedicationCatalog m ON m.MedicationId=b.MedicationId WHERE b.QuantityOnHand>0 AND b.ExpirationDate>=CAST(SYSUTCDATETIME() AS date) ORDER BY m.MedicationName,b.ExpirationDate", true))
+                .Append(Input("Quantity", "quantity", true, "number", "step='0.01'")).Append(Submit("Record dispensing")).Append("</form></section>");
             return sb.ToString();
         }
 
@@ -316,18 +404,40 @@ namespace HospitalMSWebApp.Views
                 FROM gh.Admissions a JOIN dbo.patientTbl p ON p.patientId=a.PatientId LEFT JOIN gh.Beds b ON b.BedId=a.BedId LEFT JOIN gh.Rooms r ON r.RoomId=b.RoomId LEFT JOIN gh.Wards w ON w.WardId=r.WardId ORDER BY a.AdmittedAt DESC");
             var triage = database.Query(@"SELECT TOP (20) t.TriageAssessmentId AS [ID], p.MedicalRecordNumber AS [MRN], p.patientName AS [Patient], t.AcuityLevel AS [Acuity], t.ChiefComplaint AS [Complaint], CONVERT(varchar(16),t.AssessedAt,120) AS [Assessed]
                 FROM gh.TriageAssessments t JOIN dbo.patientTbl p ON p.patientId=t.PatientId ORDER BY t.AssessedAt DESC");
-            return "<section class='split'><div class='panel'><div class='panel-head'><div><h2>Admissions</h2><p>Current and recent inpatient activity.</p></div></div>" + Table(admissions) + "</div><div class='panel'><div class='panel-head'><div><h2>Emergency triage</h2><p>Latest acuity assessments.</p></div></div>" + Table(triage) + "</div></section>";
+            var beds = database.Query(@"SELECT b.BedId AS [ID], w.WardName AS [Ward], r.RoomNumber AS [Room], b.BedNumber AS [Bed], b.Status
+                FROM gh.Beds b JOIN gh.Rooms r ON r.RoomId=b.RoomId JOIN gh.Wards w ON w.WardId=r.WardId WHERE b.Status='Available' ORDER BY w.WardName,r.RoomNumber,b.BedNumber");
+            var sb = new StringBuilder("<section class='split'><div class='panel'><div class='panel-head'><div><h2>Admissions</h2><p>Current and recent inpatient activity.</p></div></div>").Append(Table(admissions)).Append("</div><div class='panel'><div class='panel-head'><div><h2>Emergency triage</h2><p>Latest acuity assessments.</p></div></div>").Append(Table(triage)).Append("</div></section>");
+            sb.Append("<section class='panel'><h2>Available beds</h2>").Append(Table(beds)).Append("</section>");
+            sb.Append("<section class='split'><div class='panel compact'><h2>Record emergency triage</h2><form method='post' class='form-grid'>").Append(Hidden("recordTriage"))
+                .Append(Options("Patient", "patientId", "SELECT patientId AS Id, MedicalRecordNumber + ' — ' + patientName AS Name FROM dbo.patientTbl WHERE IsActive=1 ORDER BY patientName", true)).Append(Select("Acuity", "acuity", new[] { "1", "2", "3", "4", "5" }, true)).Append(Input("Chief complaint", "complaint", true)).Append(Submit("Record triage")).Append("</form></div>")
+                .Append("<div class='panel compact'><h2>Admit patient</h2><form method='post' class='form-grid'>").Append(Hidden("admitPatient"))
+                .Append(Options("Patient", "patientId", "SELECT patientId AS Id, MedicalRecordNumber + ' — ' + patientName AS Name FROM dbo.patientTbl WHERE IsActive=1 ORDER BY patientName", true)).Append(Options("Bed", "bedId", "SELECT b.BedId AS Id, w.WardName + ' / ' + r.RoomNumber + ' / ' + b.BedNumber AS Name FROM gh.Beds b JOIN gh.Rooms r ON r.RoomId=b.RoomId JOIN gh.Wards w ON w.WardId=r.WardId WHERE b.Status='Available' ORDER BY w.WardName,r.RoomNumber,b.BedNumber", true)).Append(Options("Attending clinician", "doctorId", "SELECT doctorID AS Id, doctorName AS Name FROM dbo.doctorTbl WHERE doctorStatus='Active' ORDER BY doctorName", false)).Append(Input("Admission reason", "reason", false)).Append(Submit("Admit patient")).Append("</form></div></section>");
+            sb.Append("<section class='panel compact'><h2>Discharge patient</h2><form method='post' class='form-grid'>").Append(Hidden("dischargePatient")).Append(Input("Admission ID", "admissionId", true, "number")).Append(Textarea("Discharge summary", "summary")).Append(Submit("Record discharge")).Append("</form></section>");
+            return sb.ToString();
         }
 
         private string RenderAdmin()
         {
             var departments = database.Query("SELECT DepartmentCode AS [Code], DepartmentName AS [Department], Location, Phone, CASE WHEN IsActive=1 THEN 'Active' ELSE 'Inactive' END AS [Status] FROM gh.Departments ORDER BY DepartmentName");
             var audit = database.Query("SELECT TOP (30) ActionName AS [Action], EntityType AS [Entity], EntityId AS [ID], ActorRole AS [Role], CONVERT(varchar(16),OccurredAt,120) AS [When] FROM gh.AuditEvents ORDER BY OccurredAt DESC");
+            var schedules = database.Query(@"SELECT TOP (60) d.doctorName AS [Clinician], CONVERT(varchar(10),s.ScheduleDate,23) AS [Date],
+                CONVERT(varchar(5),s.StartTime) AS [Start], CONVERT(varchar(5),s.EndTime) AS [End], s.SlotMinutes AS [Minutes],
+                CASE WHEN s.IsAvailable=1 THEN 'Published' ELSE 'Unavailable' END AS [Status]
+                FROM gh.DoctorSchedules s JOIN dbo.doctorTbl d ON d.doctorID=s.DoctorId ORDER BY s.ScheduleDate, s.StartTime");
             var sb = new StringBuilder("<section class='split'><div class='panel'><div class='panel-head'><div><h2>Departments</h2><p>Hospital clinical and operational departments.</p></div></div>").Append(Table(departments)).Append("</div><div class='panel'><div class='panel-head'><div><h2>Audit trail</h2><p>Important security and record actions.</p></div></div>").Append(Table(audit)).Append("</div></section>");
             sb.Append("<section class='split'><div class='panel compact'><h2>Add department</h2><form method='post' class='form-grid'>").Append(Hidden("addDepartment")).Append(Input("Department code", "code", true)).Append(Input("Department name", "name", true)).Append(Input("Location", "location", false)).Append(Input("Telephone", "phone", false)).Append(Submit("Add department")).Append("</form></div>")
                 .Append("<div class='panel compact'><h2>System setting</h2><form method='post' class='form-grid'>").Append(Hidden("setSetting")).Append(Input("Setting key", "key", true)).Append(Input("Value", "value", false)).Append(Submit("Save setting")).Append("</form></div></section>")
                 .Append("<section class='split'><div class='panel compact'><h2>Create nurse or pharmacist</h2><form method='post' class='form-grid'>").Append(Hidden("createStaff")).Append(Input("Staff number", "staffNumber", true)).Append(Select("Role", "role", new[] { "Nurse", "Pharmacist" }, true)).Append(Input("Full name", "name", true)).Append(Input("Email", "email", true, "email")).Append(Input("Telephone", "phone", false)).Append(Options("Department", "departmentId", "SELECT DepartmentId AS Id, DepartmentName AS Name FROM gh.Departments WHERE IsActive=1 ORDER BY DepartmentName", false)).Append(Input("Temporary password", "password", true, "password")).Append(Submit("Create staff account")).Append("</form></div>")
                 .Append("<div class='panel compact'><h2>Patient portal access</h2><form method='post' class='form-grid'>").Append(Hidden("createPatientAccess")).Append(Options("Patient", "patientId", "SELECT patientId AS Id, MedicalRecordNumber + ' — ' + patientName AS Name FROM dbo.patientTbl WHERE IsActive=1 ORDER BY patientName", true)).Append(Input("Email", "email", true, "email")).Append(Input("Temporary password", "password", true, "password")).Append(Submit("Create portal account")).Append("</form></div></section>");
+            sb.Append("<section class='split'><div class='panel'><div class='panel-head'><div><h2>Clinician availability</h2><p>Published schedule windows drive appointment slot availability.</p></div></div>").Append(Table(schedules)).Append("</div>")
+                .Append("<div class='panel compact'><h2>Publish clinician schedule</h2><form method='post' class='form-grid'>").Append(Hidden("saveDoctorSchedule"))
+                .Append(Options("Clinician", "doctorId", "SELECT doctorID AS Id, doctorName AS Name FROM dbo.doctorTbl WHERE doctorStatus='Active' ORDER BY doctorName", true))
+                .Append(Options("Department", "departmentId", "SELECT DepartmentId AS Id, DepartmentName AS Name FROM gh.Departments WHERE IsActive=1 ORDER BY DepartmentName", false))
+                .Append(Input("Date", "scheduleDate", true, "date")).Append(Input("Start", "startTime", true, "time")).Append(Input("End", "endTime", true, "time"))
+                .Append(Input("Slot minutes", "slotMinutes", true, "number", "min='5' max='120' value='20'")).Append(Submit("Publish schedule")).Append("</form></div></section>");
+            sb.Append("<section class='split'><div class='panel compact'><h2>Configure ward</h2><form method='post' class='form-grid'>").Append(Hidden("addWard")).Append(Input("Ward name", "name", true)).Append(Select("Ward type", "wardType", new[] { "General", "ICU", "Emergency", "Maternity", "Pediatric" }, true)).Append(Options("Department", "departmentId", "SELECT DepartmentId AS Id, DepartmentName AS Name FROM gh.Departments WHERE IsActive=1 ORDER BY DepartmentName", false)).Append(Submit("Add ward")).Append("</form></div>")
+                .Append("<div class='panel compact'><h2>Configure room</h2><form method='post' class='form-grid'>").Append(Hidden("addRoom")).Append(Options("Ward", "wardId", "SELECT WardId AS Id, WardName AS Name FROM gh.Wards WHERE IsActive=1 ORDER BY WardName", true)).Append(Input("Room number", "roomNumber", true)).Append(Select("Room type", "roomType", new[] { "General", "Private", "ICU", "Isolation" }, true)).Append(Submit("Add room")).Append("</form></div></section>")
+                .Append("<section class='panel compact'><h2>Configure bed</h2><form method='post' class='form-grid'>").Append(Hidden("addBed")).Append(Options("Room", "roomId", "SELECT r.RoomId AS Id, w.WardName + ' / ' + r.RoomNumber AS Name FROM gh.Rooms r JOIN gh.Wards w ON w.WardId=r.WardId WHERE r.IsActive=1 ORDER BY w.WardName,r.RoomNumber", true)).Append(Input("Bed number", "bedNumber", true)).Append(Submit("Add bed")).Append("</form></section>");
             return sb.ToString();
         }
 
@@ -357,9 +467,19 @@ namespace HospitalMSWebApp.Views
             var appointments = database.Query(@"SELECT TOP (10) a.AppointmentId AS [ID], d.doctorName AS [Clinician], CONVERT(varchar(16),a.ScheduledStart,120) AS [Start], a.Status, a.Reason
                 FROM gh.Appointments a JOIN dbo.doctorTbl d ON d.doctorID=a.DoctorId WHERE a.PatientId=@PatientId ORDER BY a.ScheduledStart DESC", Database.Parameter("@PatientId", patientId));
             var results = database.Query(@"SELECT TOP (10) c.TestName AS [Test], i.ResultValue AS [Result], i.ResultUnit AS [Unit], i.ResultFlag AS [Flag], CONVERT(varchar(16),i.ResultedAt,120) AS [Resulted]
-                FROM gh.LabOrderItems i JOIN gh.LabOrders o ON o.LabOrderId=i.LabOrderId JOIN gh.LabCatalog c ON c.LabTestId=i.LabTestId WHERE o.PatientId=@PatientId AND i.ResultStatus='Final' ORDER BY i.ResultedAt DESC", Database.Parameter("@PatientId", patientId));
+                FROM gh.vwLabResults i JOIN gh.LabOrders o ON o.LabOrderId=i.LabOrderId JOIN gh.LabCatalog c ON c.LabTestId=i.LabTestId WHERE o.PatientId=@PatientId AND i.ResultStatus='Final' ORDER BY i.ResultedAt DESC", Database.Parameter("@PatientId", patientId));
             var invoices = database.Query("SELECT TOP (10) InvoiceNumber AS [Invoice], TotalAmount AS [Total], PaidAmount AS [Paid], TotalAmount-PaidAmount AS [Balance], Status FROM gh.Invoices WHERE PatientId=@PatientId ORDER BY CreatedAt DESC", Database.Parameter("@PatientId", patientId));
-            return "<section class='panel'><div class='panel-head'><div><h2>My profile</h2><p>Contact reception to update personal or insurance details.</p></div></div>" + Table(profile) + "</section><section class='split'><div class='panel'><h2>My appointments</h2>" + Table(appointments) + "</div><div class='panel'><h2>My laboratory results</h2>" + Table(results) + "</div></section><section class='panel'><h2>My invoices</h2>" + Table(invoices) + "</section>";
+            var notifications = database.Query(@"SELECT TOP (20) NotificationId AS [ID], NotificationType AS [Type], Subject,
+                Message, CONVERT(varchar(16),CreatedAt,120) AS [Received], CASE WHEN ReadAt IS NULL THEN 'New' ELSE 'Read' END AS [Status]
+                FROM gh.Notifications WHERE UserId=@UserId ORDER BY CreatedAt DESC", Database.Parameter("@UserId", CurrentUser.UserId));
+            var documents = database.Query(@"SELECT TOP (20) FileName AS [Document], ContentType AS [Format],
+                CONVERT(varchar(16),UploadedAt,120) AS [Uploaded] FROM gh.Documents WHERE PatientId=@PatientId ORDER BY UploadedAt DESC", Database.Parameter("@PatientId", patientId));
+            var view = new StringBuilder("<section class='panel'><div class='panel-head'><div><h2>My profile</h2><p>Contact reception to update personal or insurance details.</p></div></div>").Append(Table(profile)).Append("</section>");
+            view.Append("<section class='split'><div class='panel'><h2>My appointments</h2>").Append(Table(appointments)).Append("</div><div class='panel'><h2>My laboratory results</h2>").Append(Table(results)).Append("</div></section>");
+            view.Append("<section class='split'><div class='panel'><h2>My invoices</h2>").Append(Table(invoices)).Append("</div><div class='panel'><h2>My documents</h2>").Append(Table(documents)).Append("</div></section>");
+            view.Append("<section class='panel'><div class='panel-head'><div><h2>My notifications</h2><p>Appointment, prescription, result, and billing updates.</p></div></div>").Append(Table(notifications)).Append("</section>");
+            view.Append("<section class='panel compact'><h2>Mark a notification as read</h2><p>Use the ID shown in your inbox; the update is limited to your own notifications.</p><form method='post' class='inline-form'>").Append(Hidden("markNotificationRead")).Append(Input("Notification ID", "notificationId", true, "number")).Append(Submit("Mark as read")).Append("</form></section>");
+            return view.ToString();
         }
 
         private bool CanOpen(string candidate)
@@ -398,6 +518,7 @@ namespace HospitalMSWebApp.Views
         private long? NullableLong(string key) { long value; return long.TryParse(Value(key), out value) && value > 0 ? (long?)value : null; }
         private DateTime? Date(string key) { DateTime value; return DateTime.TryParse(Value(key), CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out value) ? (DateTime?)value : null; }
         private DateTime RequiredDate(string key) { var value = Date(key); if (!value.HasValue) throw new ArgumentException("Enter a valid " + key + "."); return value.Value; }
+        private TimeSpan RequiredTime(string key) { TimeSpan value; if (!TimeSpan.TryParse(Value(key), CultureInfo.InvariantCulture, out value)) throw new ArgumentException("Enter a valid " + key + "."); return value; }
         private DateTime RequiredDateTime(string key) { DateTime value; if (!DateTime.TryParse(Value(key), CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out value)) throw new ArgumentException("Enter a valid " + key + "."); return value; }
         private decimal? Decimal(string key) { decimal value; return decimal.TryParse(Value(key), NumberStyles.Number, CultureInfo.InvariantCulture, out value) ? (decimal?)value : null; }
         private decimal RequiredDecimal(string key) { var value = Decimal(key); if (!value.HasValue || value.Value <= 0) throw new ArgumentException("Enter a valid " + key + "."); return value.Value; }

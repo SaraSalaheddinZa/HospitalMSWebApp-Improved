@@ -1,166 +1,51 @@
 ﻿using System;
 using System.Data;
-using System.Web.UI;
-
+using System.Text;
+using System.Web;
+using HospitalMSWebApp.Infrastructure;
 namespace HospitalMSWebApp.Views.Guest
 {
     public partial class Home : System.Web.UI.Page
     {
-        Models.Functions conn;
-
+        protected string DepartmentMarkup = "";
+        protected string ContactMarkup = "";
         protected void Page_Load(object sender, EventArgs e)
         {
-            conn = new Models.Functions();
-
-            if (!IsPostBack)
-            {
-                LoadStatistics();
-            }
-        }
-
-        private void LoadStatistics()
-        {
+            // Publish department names only, never staff accounts or internal clinical activity.
             try
             {
-                ViewState["PatientCount"] = GetPatientCount();
-
-                ViewState["DoctorCount"] = GetDoctorCount();
-
-                ViewState["AppointmentCount"] = GetAppointmentCount();
-
-                ViewState["LabTestCount"] = GetLabTestCount();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error loading statistics: {ex.Message}");
-
-                ViewState["PatientCount"] = 0;
-                ViewState["DoctorCount"] = 0;
-                ViewState["AppointmentCount"] = 0;
-                ViewState["LabTestCount"] = 0;
-            }
-        }
-
-        private int GetPatientCount()
-        {
-            try
-            {
-                string query = "SELECT COUNT(*) FROM patientTbl";
-                DataTable dt = conn.GetDatas(query);
-
-                if (dt.Rows.Count > 0 && dt.Rows[0][0] != DBNull.Value)
+                var db = new Database();
+                var departments = db.Query(@"SELECT DepartmentName FROM gh.Departments d WHERE IsActive=1
+                    AND NOT EXISTS(SELECT 1 FROM gh.SyntheticDemoRecords s WHERE s.TableName='[gh].[Departments]' AND s.RecordId=d.DepartmentId)
+                    ORDER BY CASE DepartmentName WHEN 'General Medicine' THEN 0 WHEN 'Laboratory' THEN 1 WHEN 'Pharmacy' THEN 2 WHEN 'Emergency Department' THEN 3 ELSE 4 END,DepartmentName");
+                var html = new StringBuilder();
+                int index = 0;
+                foreach (DataRow row in departments.Rows)
                 {
-                    return Convert.ToInt32(dt.Rows[0][0]);
+                    string name = Convert.ToString(row["DepartmentName"]);
+                    string artwork = "medicine", description = "Explore the medical team and published availability, or ask reception about this department.", action = "Find a Doctor", route = "../Patient/MedicalTeam.aspx";
+                    if (name == "Laboratory") { artwork = "laboratory"; description = "Tests ordered by your clinical team connect to your record. Return to finalized results in your Patient Portal."; action = "View your results"; route = "../login.aspx?role=Patient"; }
+                    else if (name == "Pharmacy") { artwork = "pharmacy"; description = "Stay connected to prescribed medicines and recorded dispensing, with the details kept in your own care record."; action = "View prescriptions"; route = "../login.aspx?role=Patient"; }
+                    else if (name == "Emergency Department") { artwork = "emergency"; description = "For urgent medical help, contact your local emergency services. Do not use online appointments or support forms for an emergency."; action = null; }
+                    html.Append("<details name='care-department' data-dept='").Append(artwork).Append(index == 0 ? "' open>" : "'>")
+                        .Append("<summary><span><small>").Append((++index).ToString("D2")).Append("</small> <span class='public-department-name'>")
+                        .Append(HttpUtility.HtmlEncode(name)).Append("</span></span><b aria-hidden='true'>↗</b></summary><div><p>")
+                        .Append(HttpUtility.HtmlEncode(description)).Append("</p>");
+                    if (action != null) html.Append("<a class='line-link' href='").Append(HttpUtility.HtmlAttributeEncode(route)).Append("'>").Append(action).Append(" <span aria-hidden='true'>↗</span></a>");
+                    html.Append("</div></details>");
                 }
+                DepartmentMarkup = html.Length == 0
+                    ? "<p class='public-empty'>Please ask reception about available services.</p>"
+                    : html.ToString();
+                var contact = Convert.ToString(db.Scalar("SELECT SettingValue FROM gh.SystemSettings WHERE SettingKey='ReceptionContact'"));
+                if (!string.IsNullOrWhiteSpace(contact))
+                    ContactMarkup = "<p class='public-contact-detail'><strong>Reception</strong><br />" + HttpUtility.HtmlEncode(contact) + "</p>";
             }
-            catch { }
-
-            return 0;
-        }
-
-        private int GetDoctorCount()
-        {
-            try
+            catch (System.Data.SqlClient.SqlException ex)
             {
-                string query = "SELECT COUNT(*) FROM doctorTbl WHERE doctorStatus = 'Active'";
-                DataTable dt = conn.GetDatas(query);
-
-                if (dt.Rows.Count > 0 && dt.Rows[0][0] != DBNull.Value)
-                {
-                    return Convert.ToInt32(dt.Rows[0][0]);
-                }
+                System.Diagnostics.Trace.TraceError("Public hospital information unavailable: {0}", ex.Number);
+                DepartmentMarkup = "<p class='public-empty'>Department information is temporarily unavailable. Please contact reception during your visit.</p>";
             }
-            catch { }
-
-            return 0;
-        }
-
-        private int GetAppointmentCount()
-        {
-            try
-            {
-                string query = "SELECT COUNT(*) FROM appointmentTbl";
-                DataTable dt = conn.GetDatas(query);
-
-                if (dt.Rows.Count > 0 && dt.Rows[0][0] != DBNull.Value)
-                {
-                    return Convert.ToInt32(dt.Rows[0][0]);
-                }
-            }
-            catch { }
-
-            return 0;
-        }
-
-        private int GetLabTestCount()
-        {
-            try
-            {
-                string query = "SELECT COUNT(*) FROM labTestTbl";
-                DataTable dt = conn.GetDatas(query);
-
-                if (dt.Rows.Count > 0 && dt.Rows[0][0] != DBNull.Value)
-                {
-                    return Convert.ToInt32(dt.Rows[0][0]);
-                }
-            }
-            catch { }
-
-            return 0;
-        }
-
-        protected int GetTodaysAppointments()
-        {
-            try
-            {
-                string query = $"SELECT COUNT(*) FROM appointmentTbl WHERE CAST(appointmentDate AS DATE) = CAST(GETDATE() AS DATE)";
-                DataTable dt = conn.GetDatas(query);
-
-                if (dt.Rows.Count > 0 && dt.Rows[0][0] != DBNull.Value)
-                {
-                    return Convert.ToInt32(dt.Rows[0][0]);
-                }
-            }
-            catch { }
-
-            return 0;
-        }
-
-        protected int GetPendingLabTests()
-        {
-            try
-            {
-                string query = "SELECT COUNT(*) FROM labTestTbl WHERE testStatus = 'Pending'";
-                DataTable dt = conn.GetDatas(query);
-
-                if (dt.Rows.Count > 0 && dt.Rows[0][0] != DBNull.Value)
-                {
-                    return Convert.ToInt32(dt.Rows[0][0]);
-                }
-            }
-            catch { }
-
-            return 0;
-        }
-
-        protected int PatientCount
-        {
-            get { return ViewState["PatientCount"] != null ? (int)ViewState["PatientCount"] : 0; }
-        }
-
-        protected int DoctorCount
-        {
-            get { return ViewState["DoctorCount"] != null ? (int)ViewState["DoctorCount"] : 0; }
-        }
-
-        protected int AppointmentCount
-        {
-            get { return ViewState["AppointmentCount"] != null ? (int)ViewState["AppointmentCount"] : 0; }
-        }
-
-        protected int LabTestCount
-        {
-            get { return ViewState["LabTestCount"] != null ? (int)ViewState["LabTestCount"] : 0; }
         }
     }
 }

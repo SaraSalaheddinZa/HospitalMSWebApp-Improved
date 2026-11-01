@@ -1,0 +1,298 @@
+/* Final creative polish. Prototype only; approved heart asset is unchanged. */
+/* Navigation is one quiet surface; utilities have a distinct, usable home. */
+.hybrid-study .site-header{border-color:color-mix(in srgb,var(--lavender) 31%,transparent);box-shadow:inset 0 1px var(--sheen),0 8px 32px var(--shadow);background:linear-gradient(120deg,color-mix(in srgb,var(--paper) 80%,transparent),color-mix(in srgb,var(--bg) 62%,transparent));backdrop-filter:blur(20px)}
+.hybrid-study .site-header.is-compact{background:color-mix(in srgb,var(--paper) 95%,transparent);box-shadow:inset 0 1px var(--sheen),0 10px 36px var(--shadow);border-color:var(--line)}
+.hybrid-study .brand-symbol{width:39px;height:43px;stroke-width:1.3;filter:drop-shadow(0 0 9px color-mix(in srgb,var(--accent) 18%,transparent))}
+.hybrid-study .brand>span{font-size:22px}
+.hybrid-study .brand small{font-size:6.5px;letter-spacing:.16em}
+.hybrid-study .site-header #main-nav{gap:27px}
+.hybrid-study .site-header #main-nav a{font-size:12px;position:relative}
+.hybrid-study .site-header #main-nav a:after{height:1px;bottom:2px;background:linear-gradient(90deg,var(--accent),transparent);transform-origin:left;transition:transform .25s,opacity .25s}
+.hybrid-study .header-controls{gap:1px;border:1px solid color-mix(in srgb,var(--line) 50%,transparent);border-radius:22px;padding:0 4px;background:color-mix(in srgb,var(--paper) 40%,transparent)}
+.hybrid-study .motion-button,.hybrid-study .theme-button{min-height:42px;min-width:39px;border-radius:19px}
+.hybrid-study .motion-button:hover,.hybrid-study .theme-button:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.hybrid-study .motion-button:focus-visible,.hybrid-study .theme-button:focus-visible{outline-offset:2px}
+.hybrid-study .nav-patient{padding-left:8px;margin-left:0;border-left:0;min-height:44px;display:flex;align-items:center;font-size:11px}
+.hybrid-study .nav-book{box-shadow:inset 0 1px #fff6,0 6px 20px color-mix(in srgb,var(--accent) 12%,transparent);font-size:12px;min-height:48px;padding:14px 22px}
+.hybrid-study .button.primary:hover{box-shadow:inset 0 1px #fff6,0 9px 24px color-mix(in srgb,var(--accent) 19%,transparent);transform:translateY(-2px)}
+.hybrid-study .button:active{transform:translateY(0)}
+/* Shared reflected light, with a foreground ribbon crossing only the artwork. */
+.hybrid-study .clinical-team{filter:saturate(.52) brightness(.84);opacity:.66;mask-image:linear-gradient(90deg,transparent,#000 36%),linear-gradient(0deg,transparent,#000 30%,#000 85%,transparent)}
+[data-theme=light] .hybrid-study .clinical-team{filter:saturate(.5) contrast(.94) brightness(1.02);opacity:.88}
+.clinician-bounce{position:absolute;top:200px;right:6%;width:36%;height:500px;pointer-events:none;background:radial-gradient(ellipse at 20% 58%,#edb9cc52,transparent 56%),radial-gradient(ellipse at 75% 15%,#b9b6e838,transparent 70%);opacity:calc(.38 + var(--light-energy,.32)*.5);mix-blend-mode:screen}
+[data-theme=light] .clinician-bounce{background:radial-gradient(ellipse at 20% 58%,#c586a82e,transparent 59%),radial-gradient(ellipse at 75% 15%,#a9b6e72e,transparent 65%);mix-blend-mode:multiply}
+.heart-contact{position:absolute;inset:12% -18% -10% 3%;background:radial-gradient(ellipse at 58% 65%,#15132566,transparent 63%);transform:translate(22px,20px) rotate(8deg);filter:blur(16px);z-index:-1}
+[data-theme=light] .heart-contact{background:radial-gradient(ellipse at 60% 65%,#8e72902b,transparent 65%)}
+.hybrid-study .heart-render{filter:drop-shadow(12px 18px 21px #12102035) drop-shadow(-6px 0 12px #d8a9c528)}
+.hybrid-study .digital-orbit{opacity:.4}
+.hybrid-study .hero .heart-scene{top:230px;left:53.7%}
+.scene-bridge{position:absolute;left:48%;top:472px;width:57%;height:300px;z-index:6;pointer-events:none;overflow:visible;fill:none}
+.bridge-body{fill:url(#bridge-glow);opacity:.24}
+.bridge-edge{stroke:url(#bridge-glow);stroke-width:1.1;opacity:.7}
+.bridge-pulse{fill:none;stroke:#f3c9da;stroke-width:1.8;stroke-linecap:round;stroke-dasharray:.045 .955;opacity:0;filter:drop-shadow(0 0 3px #edb2cc55)}
+[data-theme=light] .bridge-pulse{stroke:#986982}
+.hybrid-study .hero-signature{font-size:27px;right:9%;top:691px}
+.hybrid-study .hero .universe-ribbon{opacity:.64}
+.hybrid-study .hero-copy .hero-intro{font-size:15px;line-height:1.8;max-width:350px}
+/* Four chapters, with a continuous route and one focused stage at a time. */
+.hybrid-study .care-journey{display:block;padding:80px 7% 70px;position:relative}
+.hybrid-study .journey-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:50px;text-align:left}
+.hybrid-study .journey-heading h2{font-size:64px;margin-top:22px}
+.hybrid-study .journey-heading>p{max-width:320px;color:var(--muted);font-size:14px;line-height:1.9;margin:0 0 5px}
+.hybrid-study .journey-heading>p span{display:block;font-size:11px;margin-top:20px;color:var(--accent)}
+.hybrid-study .journey-constellation{margin:30px 0 0;padding:0;background:none;min-height:0;max-width:none;position:relative;text-align:left}
+.journey-route{position:absolute;left:0;right:0;top:0;height:100px;pointer-events:none}
+.journey-route svg{width:100%;height:100%;overflow:visible;fill:none}
+.route-base{stroke:var(--line);stroke-width:1;opacity:.7}
+.route-complete{stroke:var(--accent);stroke-width:1.6;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .65s cubic-bezier(.2,.6,.2,1);filter:drop-shadow(0 0 4px color-mix(in srgb,var(--accent) 35%,transparent))}
+[data-chapter="1"] .route-complete{stroke-dashoffset:.67}
+[data-chapter="2"] .route-complete{stroke-dashoffset:.33}
+[data-chapter="3"] .route-complete{stroke-dashoffset:0}
+.route-node{stroke:var(--line);stroke-width:1.5;fill:var(--bg);transition:fill .4s,r .4s}
+[data-chapter="0"] .node-0,[data-chapter="1"] .node-1,[data-chapter="2"] .node-2,[data-chapter="3"] .node-3{fill:var(--accent);stroke:var(--accent);r:7;filter:drop-shadow(0 0 7px color-mix(in srgb,var(--accent) 50%,transparent))}
+.hybrid-study .journey-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;position:relative;padding:76px 0 20px;align-items:start}
+.hybrid-study .journey-steps button{width:auto;height:auto;min-height:76px;display:flex;align-items:center;justify-content:flex-start;flex-direction:column;padding:10px 5px;gap:3px;border:0;background:none;border-radius:14px;box-shadow:none;transform:none}
+.hybrid-study .journey-steps button>span{font-size:10px;color:var(--muted);letter-spacing:.1em}
+.hybrid-study .journey-steps button strong{font-size:16px;font-weight:500;color:var(--muted)}
+.hybrid-study .journey-steps button[aria-selected=true]{background:linear-gradient(0deg,color-mix(in srgb,var(--accent) 8%,transparent),transparent);border:0;box-shadow:none}
+.hybrid-study .journey-steps button[aria-selected=true] strong{color:var(--ink)}
+.hybrid-study .journey-steps button[aria-selected=true]>span{color:var(--accent)}
+.hybrid-study .journey-steps button:hover strong{color:var(--accent)}
+.hybrid-study .journey-panel-wrap{min-height:430px;padding:10px 0 0;border:0;position:relative;overflow:visible;max-width:none;margin:22px 0 0;text-align:left}
+.hybrid-study .journey-panel-wrap [role=tabpanel]{display:grid;grid-template-columns:1.05fr 1fr;gap:8%;align-items:center;min-height:420px;padding:0;border:0;background:none;animation:chapter-in .55s ease both}
+.hybrid-study .journey-panel-wrap [role=tabpanel]:focus-visible{outline:2px solid var(--focus);outline-offset:8px;border-radius:24px}
+.chapter-art{height:370px;position:relative;isolation:isolate;overflow:hidden;border-radius:43% 54% 44% 49% / 46% 42% 56% 54%;background:radial-gradient(ellipse at 45% 40%,color-mix(in srgb,var(--lavender) 18%,transparent),transparent 67%);animation:chapter-mask .7s cubic-bezier(.2,.6,.2,1) both}
+.chapter-art:after{content:"";position:absolute;inset:0;border-radius:inherit;border:1px solid color-mix(in srgb,var(--lavender) 19%,transparent);pointer-events:none}
+.chapter-halo{position:absolute;inset:12% 13%;background:radial-gradient(ellipse,color-mix(in srgb,var(--blush) 14%,transparent),transparent 70%)}
+.chapter-illustration{width:100%;height:100%;position:relative;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.art-orbit{stroke:var(--lavender);stroke-width:.8;stroke-dasharray:2 8;opacity:.6}
+.art-shadow{fill:color-mix(in srgb,var(--lavender) 12%,transparent);stroke:none}
+.art-surface{fill:var(--surface);stroke:color-mix(in srgb,var(--lavender) 42%,transparent);stroke-width:1}
+.art-stroke{stroke:var(--accent);stroke-width:2;fill:none}
+.art-grid{fill:var(--muted);opacity:.5}
+.art-selected{fill:var(--accent);stroke:none}
+.art-check{stroke:var(--accent-ink);stroke-width:3;fill:none}
+.art-satellite{fill:var(--paper);stroke:var(--line)}
+.art-heart{stroke:var(--accent);stroke-width:1.5;fill:color-mix(in srgb,var(--blush) 13%,transparent)}
+.chapter-art-label{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-family:Georgia,serif;font-style:italic;font-size:24px;color:var(--accent);z-index:2}
+.chapter-photo img{width:100%;height:100%;object-fit:cover;object-position:49% 28%;filter:saturate(.52);mask-image:linear-gradient(#000 55%,transparent 95%)}
+.chapter-photo.chapter-care img{object-position:52% 45%}
+.chapter-photo .chapter-art-label{bottom:42px;left:12%;right:12%;line-height:1.2;text-shadow:0 1px 12px var(--bg)}
+.chapter-photo small{position:absolute;left:0;right:0;bottom:22px;font-size:9px;text-align:center;color:var(--muted)}
+.chapter-kicker{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent)}
+.hybrid-study .chapter-copy h3{font-size:51px;line-height:1.08;margin:20px 0}
+.hybrid-study .chapter-copy p{font-size:14px;line-height:1.9;max-width:380px;margin:0;color:var(--muted)}
+.hybrid-study .chapter-copy .line-link{margin-top:25px;font-size:12px;min-height:44px}
+.journey-hint{border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent);padding-top:20px;margin-top:20px;font-size:11px;color:var(--muted)}
+.journey-hint span{float:right}
+@keyframes chapter-in{from{opacity:0;translate:0 12px}to{opacity:1;translate:0 0}}
+@keyframes chapter-mask{from{clip-path:ellipse(40% 43% at 50% 50%)}to{clip-path:ellipse(75% 75% at 50% 50%)}}
+/* Login keeps the form first, with the art in a more coherent surrounding scene. */
+.hybrid-study .entry-world{padding-top:150px;background:radial-gradient(ellipse at 75% 38%,#b499c124,transparent 46%)}
+.hybrid-study .entry-shell{border-color:color-mix(in srgb,var(--lavender) 35%,transparent);background:linear-gradient(145deg,color-mix(in srgb,var(--paper) 96%,transparent),color-mix(in srgb,var(--bg) 96%,transparent));padding-top:22px;box-shadow:inset 0 1px var(--sheen),0 22px 80px var(--shadow)}
+.hybrid-study .entry-shell:before{inset:-9px -9px 10px;border-color:color-mix(in srgb,var(--lavender) 16%,transparent)}
+.hybrid-study .entry-background>img{opacity:.68;filter:saturate(.53) brightness(.86)}
+[data-theme=light] .hybrid-study .entry-background>img{opacity:.82;filter:saturate(.5) contrast(.95) brightness(1.02)}
+.hybrid-study .entry-background .clinician-bounce{left:4%;right:auto;top:230px;width:34%;height:450px}
+.hybrid-study .entry-atmosphere{background:linear-gradient(0deg,var(--bg) 3%,transparent 65%),linear-gradient(90deg,transparent 15%,color-mix(in srgb,var(--bg) 25%,transparent) 40%,var(--bg) 80%)}
+.hybrid-study .entry-sculpture,.hybrid-study.login-page[data-entry=staff] .entry-sculpture{top:315px;right:5%;width:245px;height:315px;opacity:1;z-index:4}
+.hybrid-study .entry-world .scene-bridge{top:510px;left:61%;width:40%;height:230px;z-index:4}
+.entry-world .bridge-body{fill:url(#entry-bridge-glow)}
+.entry-world .bridge-edge{stroke:url(#entry-bridge-glow)}
+.hybrid-study .entry-world .universe-ribbon{z-index:2;opacity:.42}
+.hybrid-study .entry-story{top:580px}
+.hybrid-study .entry-story-copy{font-size:13px;line-height:1.8}
+.hybrid-study .field-group input,.hybrid-study .field-group select{background:color-mix(in srgb,var(--field) 93%,var(--paper));border-color:color-mix(in srgb,var(--line) 85%,transparent)}
+.hybrid-study .field-group input:focus-visible,.hybrid-study .field-group select:focus-visible{outline-width:1.5px;outline-offset:3px;box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 9%,transparent)}
+.hybrid-study .form-error{scroll-margin-top:140px}
+@media(max-width:1250px){
+ .hybrid-study .brand>span{font-size:19px}.hybrid-study .brand small{font-size:5.5px}.hybrid-study .site-header #main-nav{gap:17px}.hybrid-study .nav-patient{display:none}
+ .hybrid-study .hero .heart-scene{left:55%;top:260px}.scene-bridge{top:495px;left:47%;width:62%}
+ .hybrid-study .entry-sculpture,.hybrid-study.login-page[data-entry=staff] .entry-sculpture{width:185px;height:240px;right:2.5%;top:335px}
+ .hybrid-study .journey-heading h2{font-size:57px}.hybrid-study .chapter-copy h3{font-size:44px}
+}
+@media(max-width:1100px){
+ .hybrid-study .site-header #main-nav{gap:0}
+ .hybrid-study .hero .heart-scene{left:58%;top:290px}.scene-bridge{top:510px}
+ .hybrid-study .entry-sculpture,.hybrid-study.login-page[data-entry=staff] .entry-sculpture{right:2%;width:155px;height:200px}
+ .hybrid-study .care-journey{padding:65px 6%}.chapter-art{height:320px}
+}
+@media(max-width:800px){
+ .hybrid-study .site-header .brand>span{font-size:18px}.hybrid-study .nav-book{font-size:11px;padding:13px 18px}
+ .hybrid-study .hero .heart-scene{left:58%;top:350px}.scene-bridge{top:562px;left:48%;width:63%;height:210px}
+ .hybrid-study .hero-signature{top:689px;font-size:23px}
+ .clinician-bounce{right:-5%;width:60%;height:500px;top:220px}
+ .hybrid-study .hero-copy .hero-intro{font-size:13px;max-width:280px}
+ .hybrid-study .journey-heading{display:block}.hybrid-study .journey-heading h2{font-size:53px}.hybrid-study .journey-heading>p{margin-top:24px;max-width:420px;font-size:13px}.hybrid-study .journey-heading>p span{margin-top:10px}
+ .hybrid-study .journey-panel-wrap [role=tabpanel]{gap:5%;grid-template-columns:1fr 1fr}.hybrid-study .chapter-copy h3{font-size:36px}.hybrid-study .chapter-copy p{font-size:12px}.chapter-art{height:280px}.chapter-art-label{font-size:20px}
+ .hybrid-study .entry-world{padding-top:140px}.hybrid-study .entry-story{top:auto}.hybrid-study .entry-sculpture,.hybrid-study.login-page[data-entry=staff] .entry-sculpture{right:1%;top:315px;width:130px;height:170px;opacity:.55}
+ .hybrid-study .entry-world .scene-bridge{left:58%;width:48%;top:440px}
+}
+@media(max-width:600px){
+ html{scroll-padding-top:102px}
+ .hybrid-study .site-header{gap:7px;padding:10px 11px}.hybrid-study .site-header .brand>span{font-size:15px}.hybrid-study .brand-symbol{width:28px;height:32px}.hybrid-study .brand small{font-size:4.5px;letter-spacing:.09em}
+ .hybrid-study .header-controls{padding:0;border:0;background:none;gap:0}.hybrid-study .motion-button,.hybrid-study .theme-button{min-width:34px;min-height:44px}.hybrid-study .menu-button{min-width:36px;min-height:44px}
+ .hybrid-study .hero-copy{padding-top:128px}.hybrid-study .hero-copy h1{font-size:47px;margin-bottom:18px}.hybrid-study .hero-copy .hero-intro{font-size:12px;line-height:1.8;max-width:300px}.hybrid-study .hero-actions{margin-top:20px}
+ .hybrid-study .hero .heart-scene{left:7%;top:448px;width:215px;height:275px}.hybrid-study .clinical-team{top:374px;opacity:.64}[data-theme=light] .hybrid-study .clinical-team{opacity:.84}
+ .scene-bridge{left:1%;top:655px;width:110%;height:160px}.clinician-bounce{top:425px;right:-5%;height:340px;width:100%}
+ .hybrid-study .hero-signature{top:735px;font-size:20px}.hybrid-study .hero-access{top:805px}
+ .hybrid-study .care-journey{padding:42px 7% 40px}.hybrid-study .journey-heading h2{font-size:46px}.hybrid-study .journey-heading>p{font-size:12px}.hybrid-study .journey-heading>p br{display:none}
+ .journey-route{height:65px;top:5px}.hybrid-study .journey-steps{padding:60px 0 18px}.hybrid-study .journey-steps button{padding:7px 2px;min-height:66px;gap:3px}.hybrid-study .journey-steps button strong{font-size:11px}.hybrid-study .journey-steps button>span{font-size:9px}
+ .hybrid-study .journey-panel-wrap{min-height:535px;padding:0}.hybrid-study .journey-panel-wrap [role=tabpanel]{grid-template-columns:1fr;gap:25px;min-height:0;align-items:start}
+ .chapter-art{height:240px;max-width:360px;width:100%;margin:auto}.chapter-art-label{font-size:21px;bottom:15px}.chapter-photo small{bottom:16px;font-size:8px}.chapter-photo .chapter-art-label{bottom:34px}
+ .hybrid-study .chapter-copy h3{font-size:36px;margin:13px 0 16px}.hybrid-study .chapter-copy p{font-size:13px}.hybrid-study .chapter-copy .line-link{margin-top:15px;font-size:11px}
+ .chapter-kicker{font-size:9px}.journey-hint{font-size:10px;line-height:1.8;margin-top:28px}.journey-hint span{float:none;display:block}
+ .hybrid-study .entry-world{padding-top:118px}.hybrid-study .entry-shell{padding:22px 23px 28px}.hybrid-study .entry-story{top:auto;margin-bottom:18px}.hybrid-study .entry-story h1{font-size:28px}
+ .hybrid-study .entry-sculpture,.hybrid-study.login-page[data-entry=staff] .entry-sculpture{display:none}
+ .hybrid-study .entry-world .scene-bridge{top:460px;left:-15%;width:130%;height:200px;opacity:.5}
+ .hybrid-study .entry-background>img{opacity:.24}[data-theme=light] .hybrid-study .entry-background>img{opacity:.25}
+ .hybrid-study .entry-background .clinician-bounce{left:0;top:140px;width:100%;opacity:.3}
+}
+@media(max-width:360px){.hybrid-study .site-header .brand>span{font-size:13px}.hybrid-study .brand-symbol{width:24px}.hybrid-study .hero-copy h1{font-size:43px}.hybrid-study .motion-button,.hybrid-study .theme-button{min-width:30px}}
+@media(prefers-reduced-motion:reduce){.hybrid-study .journey-panel-wrap [role=tabpanel],.chapter-art{animation:none!important;clip-path:none!important}.route-complete,.route-node{transition:none!important}}
+html[data-static=true] .hybrid-study .journey-panel-wrap [role=tabpanel],html[data-static=true] .chapter-art{animation:none!important;clip-path:none!important}
+html[data-static=true] .route-complete,html[data-static=true] .route-node{transition:none!important}
+
+/* 27 October: below-hero storytelling and heart-free login. The approved hero
+   selectors above are deliberately unchanged. */
+.story-edition .story-intro{display:grid;grid-template-columns:.85fr 1.15fr;gap:5%;padding:100px 8% 45px;min-height:0;background:radial-gradient(ellipse at 75% 40%,color-mix(in srgb,var(--lavender) 10%,transparent),transparent 65%)}
+.story-edition .story-intro:before{inset:4% -10% 10%;border-radius:55% 40% 46% 35%;transform:rotate(-5deg);opacity:.55}
+.intro-copy{position:relative;z-index:2;align-self:center;max-width:410px}
+.intro-copy h2{font-size:clamp(56px,5.1vw,78px);margin:26px 0}
+.intro-copy>p:not(.eyebrow){font-size:14px;line-height:1.9;color:var(--muted);max-width:340px;margin-top:16px}
+.intro-copy>p:nth-of-type(2){color:var(--ink);font-size:17px}
+.intro-copy .round-link{font-size:12px;min-height:48px}
+.intro-portrait{position:relative;align-self:center;margin:0;height:530px;isolation:isolate}
+.intro-frame{height:100%;border-radius:48% 48% 16% 38%/46% 43% 18% 32%;overflow:hidden;transform:rotate(3deg);box-shadow:0 24px 60px var(--shadow)}
+.intro-frame img{width:100%;height:100%;object-fit:cover;object-position:62% 50%;filter:saturate(.56) brightness(.85);transform:scale(1.04) rotate(-3deg);transition:transform 1s}
+[data-theme=light] .intro-frame img{filter:saturate(.56)}
+.intro-frame:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#282131d6,transparent 46%);pointer-events:none}
+.intro-portrait:hover img{transform:scale(1.07) rotate(-3deg)}
+.intro-portrait figcaption{position:absolute;left:13%;bottom:8%;z-index:2;color:#fff8f8}
+.intro-portrait figcaption span{display:block;font:italic 29px/1.2 Georgia,serif}
+.intro-portrait figcaption small{display:block;font-size:8px;margin-top:12px;letter-spacing:.03em;color:#eee1e7}
+.intro-thread{position:absolute;inset:-8% -12%;width:122%;height:119%;pointer-events:none;fill:none;stroke:var(--lavender);stroke-width:.8;opacity:.7;z-index:-1}
+.intro-continuity{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:22px;margin-top:35px;padding:32px 0 0;color:var(--muted);font-size:11px}
+.intro-continuity i{height:1px;flex:1;background:linear-gradient(90deg,var(--line),var(--accent),var(--line));opacity:.6;position:relative}
+.intro-continuity i:after{content:"";width:5px;height:5px;background:var(--accent);border-radius:50%;position:absolute;left:50%;top:-2px}
+.story-edition .care-journey{padding-top:75px;padding-bottom:65px;background:radial-gradient(ellipse at 25% 63%,color-mix(in srgb,var(--blush) 10%,transparent),transparent 58%)}
+.story-edition .journey-panel-wrap{margin-top:5px;min-height:400px}
+.story-edition .journey-panel-wrap [role=tabpanel]{min-height:400px}
+.story-edition .chapter-art{height:350px}
+.story-edition .journey-heading h2{font-size:62px}
+.story-edition .chapter-copy h3{font-size:48px}
+.story-edition .journey-hint{margin-top:5px}
+/* Department exploration: one changing illustration, not a repeated card grid. */
+.story-edition .department-exploration{display:grid;grid-template-columns:.95fr 1.05fr;gap:0 10%;padding:80px 8% 65px;position:relative;isolation:isolate;background:linear-gradient(140deg,color-mix(in srgb,var(--surface) 60%,transparent),transparent 68%);border-radius:25% 0 0 0/8% 0 0 0}
+.department-editorial{grid-column:1;grid-row:1;z-index:1}
+.department-editorial h2{font-size:64px;margin:25px 0}
+.department-editorial>p:last-child{font-size:13px;color:var(--muted);max-width:340px;line-height:1.9}
+.department-stage{grid-column:1;grid-row:2;position:relative;height:370px;margin-top:10px;text-align:center;color:var(--lavender)}
+.department-map{height:100%;width:100%;overflow:visible;fill:none}
+.dept-orbit{stroke:currentColor;stroke-width:.7;opacity:.5}
+.dept-orbit.fine{stroke-dasharray:1 9}
+.dept-center{stroke:currentColor;stroke-width:.6;fill:color-mix(in srgb,var(--paper) 60%,transparent)}
+.dept-drawing{stroke:var(--accent);stroke-width:2;fill:none;stroke-linejoin:round;stroke-linecap:round;animation:chapter-in .6s ease both}
+.dept-hatch{opacity:.4;stroke-width:1.2}
+.dept-dot{fill:var(--accent);stroke:none}
+.department-scene-caption{position:absolute;bottom:25px;left:0;right:0;font:italic 23px/1.3 Georgia,serif;color:var(--accent)}
+.department-stage>small{position:absolute;bottom:0;left:0;right:0;font-size:8px;color:var(--muted)}
+.story-edition .department-list{grid-column:2;grid-row:1/3;align-self:center;padding:0;max-width:none}
+.story-edition .department-list summary{padding:25px 0;min-height:80px;align-items:center}
+.story-edition .department-list summary>span{font-size:30px}
+.story-edition .department-list summary small{font:10px Manrope,sans-serif;color:var(--muted);padding-right:19px}
+.story-edition .department-list summary>b{font-size:22px;font-weight:400;transition:transform .3s;background:none;width:35px}
+.story-edition .department-list details[open] summary{color:var(--accent)}
+.story-edition .department-list details[open] summary>b{transform:rotate(90deg)}
+.story-edition .department-list details>div{padding:0 25px 25px 33px;animation:chapter-in .4s ease both}
+.story-edition .department-list details>div p{font-size:13px;line-height:1.9;max-width:370px}
+.story-edition .department-list .line-link{font-size:11px;min-height:44px;margin-top:10px}
+.story-edition .department-list .directory-note{font-size:9px;line-height:1.8;margin:24px 0 10px;color:var(--muted);max-width:430px}
+.story-edition .department-list .synthetic{border-bottom:0}
+.story-edition .department-list .synthetic summary{padding:10px 0;min-height:44px}
+.story-edition .department-list .synthetic summary>span{font:11px Manrope,sans-serif;color:var(--muted)}
+.story-edition .department-list .synthetic>div{padding-left:0}
+/* The medical team has its own editorial moment; no invented staff profiles. */
+.medical-discovery{display:grid;grid-template-columns:1fr 1.05fr;gap:11%;padding:90px 8% 100px;position:relative;align-items:center;isolation:isolate}
+.medical-discovery:before{content:"";position:absolute;inset:13% -6% 8%;border-radius:50% 20% 45% 15%;transform:rotate(-5deg);background:radial-gradient(ellipse at 30% 30%,color-mix(in srgb,var(--lavender) 12%,transparent),transparent 66%);z-index:-1}
+.discovery-portrait{height:560px;position:relative;border-radius:45% 45% 10% 10%/35% 35% 9% 9%;overflow:hidden;box-shadow:0 25px 55px var(--shadow)}
+.discovery-portrait img{width:100%;height:100%;object-fit:cover;object-position:42% 50%;filter:saturate(.5) brightness(.85);transition:transform 1.2s}
+[data-theme=light] .discovery-portrait img{filter:saturate(.5)}
+.discovery-portrait:hover img{transform:scale(1.025)}
+.discovery-portrait:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#252234b5,transparent 35%);pointer-events:none}
+.discovery-portrait figcaption{position:absolute;bottom:26px;left:0;right:0;text-align:center;font-size:8px;color:#f5edf3;z-index:2}
+.discovery-copy h2{font-size:clamp(48px,4.4vw,65px);line-height:1.07;margin:26px 0}
+.discovery-copy>p:not(.eyebrow){font-size:14px;line-height:1.9;color:var(--muted);max-width:370px}
+.discovery-guides{margin:25px 0 30px;display:flex;flex-direction:column;gap:10px;font-size:11px;color:var(--muted);counter-reset:discovery}
+.discovery-guides span{display:flex;align-items:center;gap:15px}
+.discovery-guides span:before{counter-increment:discovery;content:"0" counter(discovery);font-size:9px;color:var(--accent);width:24px;border-bottom:1px solid var(--line)}
+.discovery-copy>.button{font-size:12px;gap:25px}
+.discovery-copy>small{display:block;font-size:9px;color:var(--muted);margin:15px 0}
+.discovery-whisper{position:absolute;bottom:30px;left:11%;font:italic 47px/1 Georgia,serif;color:var(--accent);opacity:.23;pointer-events:none;z-index:-1}
+/* The thread resolves in a single useful invitation. */
+.connection-finale{position:relative;isolation:isolate;padding:75px 7% 45px;text-align:center;background:radial-gradient(ellipse at 50% 45%,color-mix(in srgb,var(--blush) 13%,transparent),transparent 65%)}
+.finale-thread{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:var(--lavender);stroke-width:.8;opacity:.35;pointer-events:none;z-index:-1}
+.finale-thread path+path{stroke:var(--accent);opacity:.4}
+.finale-copy h2{font-size:clamp(52px,5.8vw,86px);margin:25px 0}
+.finale-copy>p:not(.eyebrow){font-size:14px;line-height:1.9;color:var(--muted)}
+.finale-actions{display:flex;justify-content:center;gap:14px;margin:28px 0}
+.finale-staff{display:inline-flex;align-items:center;gap:14px;min-height:58px;border-top:1px solid var(--line);margin-top:28px;padding-top:20px;font-size:11px;text-align:left;color:var(--muted)}
+.finale-staff small{display:block;color:var(--ink);font-size:13px;margin-top:3px}
+.finale-staff b{font-weight:400;font-size:20px;margin-left:35px}
+.finale-staff:hover small{color:var(--accent)}
+.story-edition .story-footer{padding:45px 7% 0;border-top:1px solid color-mix(in srgb,var(--line) 50%,transparent);background:linear-gradient(130deg,color-mix(in srgb,var(--surface) 60%,transparent),transparent)}
+.footer-story-top{display:flex;align-items:center;justify-content:space-between;gap:40px;margin-bottom:40px}
+.footer-story-top>p{font:28px/1.25 Georgia,serif;letter-spacing:-.025em}
+.footer-story-links{display:grid;grid-template-columns:1fr 1fr 1fr 1.2fr;gap:50px}
+.footer-story-links nav{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+.footer-story-links nav>span{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.footer-story-links nav>a{font-size:11px;min-height:34px;display:flex;align-items:center;color:var(--muted)}
+.footer-story-links nav>a:hover{color:var(--ink)}
+.footer-disclosure{font-size:10px;line-height:1.9;color:var(--muted);max-width:260px}
+.story-edition .footer-bottom{margin-top:36px;padding:24px 0;font-size:9px;justify-content:space-between}
+/* Login is a photographic sanctuary, not another anatomical hero. */
+.hybrid-study.login-page .entry-world{padding-top:148px;min-height:1000px;background:radial-gradient(ellipse at 73% 50%,color-mix(in srgb,var(--lavender) 15%,transparent),transparent 58%)}
+.hybrid-study.login-page .entry-shell{width:460px;margin-left:25%;border-radius:38px 38px 50px 50px;padding:25px 36px 32px}
+.hybrid-study.login-page .entry-background>img{top:105px;left:-10%;width:81%;height:760px;object-position:60% 20%;opacity:.75;mask-image:linear-gradient(90deg,#000 35%,transparent 95%),linear-gradient(0deg,transparent,#000 28%,#000 85%,transparent)}
+.hybrid-study.login-page .entry-background .staff-scene{left:-4%;width:69%;object-position:43% 10%}
+[data-theme=light] .hybrid-study.login-page .entry-background>img{opacity:.9;filter:saturate(.5) contrast(.96)}
+.hybrid-study.login-page .entry-atmosphere{background:linear-gradient(0deg,var(--bg) 3%,transparent 62%),linear-gradient(90deg,transparent 25%,color-mix(in srgb,var(--bg) 30%,transparent) 45%,var(--bg) 83%)}
+.hybrid-study.login-page .entry-story{top:600px;left:8%;max-width:330px}
+.hybrid-study.login-page .entry-story h1{font-size:53px}
+.hybrid-study.login-page .entry-story-copy{max-width:280px}
+.hybrid-study.login-page .entry-story .eyebrow{font-size:9px}
+.hybrid-study.login-page .entry-shared-light{left:12%;right:auto;top:250px;width:45%;height:600px;opacity:.28;background:radial-gradient(ellipse,#cfa9c03b,transparent 70%)}
+.hybrid-study.login-page .entry-world .universe-ribbon{left:-20%;width:140%;top:590px;height:400px;opacity:.45;z-index:2}
+.hybrid-study.login-page .ribbon-pulse{animation:login-current 12s ease-in-out infinite;opacity:.2}
+.hybrid-study.login-page .ribbon-pulse.echo{animation-delay:-6s;opacity:.12}
+.hybrid-study.login-page .login-help{min-height:44px;display:flex;align-items:center;justify-content:center;line-height:1.6}
+.hybrid-study.login-page .entry-story h1,.hybrid-study.login-page .entry-story-copy{text-shadow:0 2px 18px var(--bg)}
+@keyframes login-current{0%,100%{stroke-dashoffset:0;opacity:0}35%{opacity:.26}75%{stroke-dashoffset:-.9;opacity:0}}
+@media(min-width:1101px){.hybrid-study.login-page[data-entry=patient] .entry-background .patient-scene{left:-18%}}
+@media(max-width:1100px){
+ .story-edition .story-intro{padding:75px 7% 40px;gap:5%}.intro-copy h2{font-size:61px}.intro-portrait{height:440px}.intro-portrait figcaption span{font-size:24px}.intro-portrait figcaption small{font-size:7px}
+ .story-edition .department-exploration{gap:0 6%;padding:65px 7%}.department-editorial h2{font-size:55px}.story-edition .department-list summary>span{font-size:25px}.department-stage{height:320px}
+ .medical-discovery{gap:7%;padding:65px 7% 80px}.discovery-portrait{height:500px}.discovery-copy h2{font-size:49px}.discovery-copy>.button{font-size:11px;padding:15px 20px}
+ .footer-story-links{gap:30px}.footer-story-top>p{font-size:25px}
+ .hybrid-study.login-page .entry-shell{margin-left:31%;width:430px;padding:24px 30px}.hybrid-study.login-page .entry-story{left:5%;max-width:240px;top:595px}.hybrid-study.login-page .entry-story h1{font-size:41px}.hybrid-study.login-page .entry-story-copy{max-width:230px;font-size:12px}.hybrid-study.login-page .entry-background>img{left:-28%;width:100%;height:750px}.hybrid-study.login-page .entry-background .staff-scene{left:-14%;width:82%}
+}
+@media(max-width:800px){
+ .story-edition .story-intro{padding:60px 7% 35px;grid-template-columns:.95fr 1.05fr;display:grid;gap:6%}.intro-copy h2{font-size:49px}.intro-copy>p:nth-of-type(2){font-size:15px}.intro-copy>p:not(.eyebrow){font-size:12px}.intro-portrait{height:380px}.intro-portrait figcaption{left:12%;bottom:9%;max-width:80%}.intro-portrait figcaption span{font-size:21px}.intro-continuity{font-size:9px;gap:12px;margin-top:20px}
+ .story-edition .journey-heading h2{font-size:53px}.story-edition .chapter-copy h3{font-size:36px}.story-edition .chapter-art{height:280px}
+ .story-edition .department-exploration{grid-template-columns:1fr 1.08fr;gap:0 6%;padding:55px 7%}.department-editorial h2{font-size:47px}.department-editorial>p:last-child{font-size:12px}.department-stage{height:280px}.department-scene-caption{font-size:19px;bottom:21px}.department-stage>small{font-size:7px}.story-edition .department-list summary>span{font-size:21px}.story-edition .department-list summary small{padding-right:10px;font-size:8px}.story-edition .department-list summary{min-height:72px;padding:22px 0}.story-edition .department-list details>div{padding:0 0 22px 0}.story-edition .department-list details>div p{font-size:12px}
+ .medical-discovery{grid-template-columns:.9fr 1.1fr;gap:7%;padding:50px 7% 80px}.discovery-copy h2{font-size:40px}.discovery-copy>p:not(.eyebrow){font-size:12px}.discovery-portrait{height:470px}.discovery-guides{font-size:10px}.discovery-copy>.button{font-size:10px;gap:12px}.discovery-whisper{font-size:35px;bottom:28px}.discovery-portrait figcaption{font-size:7px;padding:0 20px}
+ .connection-finale{padding-top:55px}.finale-copy h2{font-size:62px}.footer-story-links{grid-template-columns:1fr 1fr 1fr;gap:30px}.footer-disclosure{grid-column:1/-1;max-width:none}.footer-story-top>p{font-size:23px}
+ .hybrid-study.login-page .entry-world{padding:138px 6% 45px;min-height:0}.hybrid-study.login-page .entry-shell{margin:0;width:440px}.hybrid-study.login-page .entry-story{position:relative;left:auto;top:auto;max-width:100%;margin:0 0 23px}.hybrid-study.login-page .entry-story h1{font-size:34px}.hybrid-study.login-page .entry-story-copy{display:none}.hybrid-study.login-page .entry-background>img{left:-15%;width:105%;top:90px;height:700px;opacity:.28}.hybrid-study.login-page .entry-background .staff-scene{left:0;width:95%}[data-theme=light] .hybrid-study.login-page .entry-background>img{opacity:.35}.hybrid-study.login-page .entry-world .universe-ribbon{top:480px}
+}
+@media(max-width:600px){
+ .story-edition .story-intro{display:flex;flex-direction:column;gap:30px;padding:48px 7% 30px}.intro-copy{align-self:flex-start;max-width:none}.intro-copy h2{font-size:51px}.intro-copy>p:nth-of-type(2){font-size:15px}.intro-copy>p:not(.eyebrow){font-size:13px}.intro-copy .round-link{margin-top:14px}.intro-portrait{width:100%;height:340px;max-width:410px}.intro-portrait figcaption span{font-size:24px}.intro-portrait figcaption small{font-size:7px}.intro-continuity{width:100%;margin:8px 0 0;font-size:9px;line-height:1.6;gap:10px}.intro-continuity i{min-width:14px}.intro-continuity>span{max-width:85px}
+ .story-edition .care-journey{padding-top:48px;padding-bottom:35px}.story-edition .journey-heading h2{font-size:46px}.story-edition .chapter-art{height:230px}.story-edition .journey-panel-wrap{min-height:535px}.story-edition .journey-panel-wrap [role=tabpanel]{min-height:0}.story-edition .chapter-copy h3{font-size:36px}
+ .story-edition .department-exploration{display:grid;grid-template-columns:1fr;gap:0;padding:40px 7%;border-radius:18% 0 0 0/3% 0 0 0}.department-editorial{grid-row:1;grid-column:1}.department-editorial h2{font-size:48px;margin:22px 0}.department-editorial>p:last-child{font-size:13px}.department-stage{grid-row:2;grid-column:1;height:280px;margin:10px 0 18px}.department-stage>small{font-size:8px}.department-scene-caption{font-size:23px;bottom:24px}.story-edition .department-list{grid-row:3;grid-column:1}.story-edition .department-list summary>span{font-size:27px}.story-edition .department-list summary{padding:20px 0}.story-edition .department-list details>div p{font-size:13px}.story-edition .department-list .directory-note{font-size:9px}.story-edition .department-list .synthetic summary>span{font-size:11px}
+ .medical-discovery{display:flex;flex-direction:column-reverse;gap:30px;padding:45px 7% 70px}.discovery-copy{width:100%}.discovery-copy h2{font-size:47px}.discovery-copy>p:not(.eyebrow){font-size:13px}.discovery-guides{gap:8px;margin:22px 0;font-size:11px}.discovery-copy>.button{font-size:11px;min-height:50px}.discovery-portrait{width:100%;height:380px}.discovery-portrait img{object-position:45% 30%}.discovery-portrait figcaption{font-size:8px}.discovery-whisper{font-size:31px;bottom:25px;left:10%}
+ .connection-finale{padding:45px 7% 40px}.finale-copy h2{font-size:47px}.finale-copy>p:not(.eyebrow){font-size:12px}.finale-actions{gap:10px;flex-wrap:wrap}.finale-actions .button{font-size:11px;padding:13px 18px;min-height:50px}.finale-staff{margin-top:10px;font-size:10px}.finale-staff small{font-size:12px}.finale-staff b{margin-left:15px}
+ .story-edition .story-footer{padding:35px 7% 100px}.footer-story-top{flex-wrap:wrap;gap:25px;margin-bottom:30px}.footer-story-top>.brand{flex:1}.footer-story-top>p{order:3;width:100%;font-size:27px}.footer-story-links{grid-template-columns:1fr 1fr;gap:25px}.footer-story-links nav{gap:0}.footer-story-links nav>a{min-height:44px;font-size:11px}.footer-story-links nav>span{font-size:9px}.footer-disclosure{grid-column:2;grid-row:2;font-size:9px;align-self:center}.story-edition .footer-bottom{margin-top:25px;padding-top:20px;gap:16px;flex-wrap:wrap;font-size:8px}
+ .hybrid-study.login-page .entry-world{padding:115px 20px 35px}.hybrid-study.login-page .entry-shell{width:100%;padding:22px 23px 28px;border-radius:30px 30px 40px 40px}.hybrid-study.login-page .entry-story{margin-bottom:18px}.hybrid-study.login-page .entry-story h1{font-size:28px}.hybrid-study.login-page .entry-story .eyebrow{font-size:8px}.hybrid-study.login-page .entry-background>img{opacity:.17;left:-20%;width:135%;height:560px}.hybrid-study.login-page .entry-background .staff-scene{left:0;width:110%}[data-theme=light] .hybrid-study.login-page .entry-background>img{opacity:.22}.hybrid-study.login-page .entry-world .universe-ribbon{top:420px;opacity:.3}
+}
+@media(prefers-reduced-motion:reduce){.dept-drawing,.department-list details>div,.login-page .ribbon-pulse{animation:none!important}.intro-portrait img,.discovery-portrait img{transition:none!important}}
+html[data-static=true] .dept-drawing,html[data-static=true] .department-list details>div,html[data-static=true] .login-page .ribbon-pulse{animation:none!important}
+html[data-static=true] .intro-portrait img,html[data-static=true] .discovery-portrait img{transition:none!important}

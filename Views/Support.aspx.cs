@@ -6,7 +6,7 @@ using System.Web.UI;
 
 namespace HospitalMSWebApp.Views
 {
-    public partial class Support : System.Web.UI.Page
+    public partial class Support : HospitalMSWebApp.Infrastructure.PublicRequestPage
     {
         Models.Functions conn;
 
@@ -22,6 +22,7 @@ namespace HospitalMSWebApp.Views
 
         protected void submitBtn_Click(object sender, EventArgs e)
         {
+            if(!ConsumeSubmission()){ShowAlert("This form expired or was already submitted. Refresh and try again.", "error");return;}
             try
             {
                 if (!ValidateInputs())
@@ -39,7 +40,7 @@ namespace HospitalMSWebApp.Views
                 if (SaveSupportTicket(ticketNumber, name, email, category, priority, subject, description))
                 {
                     SendTicketConfirmation(email, name, ticketNumber, subject);
-                    ShowAlert($"Ticket submitted! Your reference number is <strong>{ticketNumber}</strong>. We'll be in touch shortly.", "success");
+                    ShowAlert($"Ticket submitted. Your reference number is {ticketNumber}. Keep it for follow-up with the hospital support team.", "success");
                     ClearForm();
                 }
                 else
@@ -111,7 +112,7 @@ namespace HospitalMSWebApp.Views
         private string GenerateTicketNumber()
         {
             string datePart = DateTime.Now.ToString("yyyyMMdd");
-            string randomPart = new Random().Next(1000, 9999).ToString();
+            string randomPart = Guid.NewGuid().ToString("N").Substring(0,8).ToUpperInvariant();
             return $"SUP-{datePart}-{randomPart}";
         }
 
@@ -161,6 +162,8 @@ namespace HospitalMSWebApp.Views
                 }
 
                 string mailSubject = $"Guardian Health — Support Ticket #{ticketNumber}";
+                name=System.Web.HttpUtility.HtmlEncode(name);
+                subject=System.Web.HttpUtility.HtmlEncode(subject);
                 string body = $@"
                     <html><body style='font-family:sans-serif;color:#333;line-height:1.6'>
                     <div style='max-width:600px;margin:0 auto;padding:32px'>
@@ -172,7 +175,7 @@ namespace HospitalMSWebApp.Views
                             <p><strong>Subject:</strong> {subject}</p>
                             <p><strong>Submitted:</strong> {DateTime.Now:yyyy-MM-dd HH:mm}</p>
                         </div>
-                        <p>We'll respond within 2 hours for high-priority issues, or within 24 hours otherwise.</p>
+                        <p>Keep this reference number for follow-up with the hospital support team. Do not use support requests for medical emergencies.</p>
                         <p style='font-size:0.8rem;color:#888'>This is an automated message — please do not reply directly.</p>
                     </div></body></html>";
 
@@ -206,41 +209,20 @@ namespace HospitalMSWebApp.Views
 
         private DataTable ExecuteParameterizedQuery(string query, params SqlParameter[] parameters)
         {
-            DataTable dt = new DataTable();
-            string connString = Models.Functions.ConnectionString;
-
-            if (string.IsNullOrEmpty(connString))
-            {
-                string modifiedQuery = query;
-                foreach (var param in parameters)
-                    modifiedQuery = modifiedQuery.Replace(param.ParameterName, $"'{param.Value}'");
-                return conn.GetDatas(modifiedQuery);
-            }
-
-            using (SqlConnection connection = new SqlConnection(connString))
-            using (SqlCommand command = new SqlCommand(query, connection))
-            {
-                command.Parameters.AddRange(parameters);
-                new SqlDataAdapter(command).Fill(dt);
-            }
-
-            return dt;
+            return new Models.Functions().GetDatas(query,parameters);
         }
 
         private string GetClientIP()
         {
-            string ip = Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
-            if (string.IsNullOrEmpty(ip))
-                ip = Request.ServerVariables["REMOTE_ADDR"];
-            return ip ?? "Unknown";
+            return Request.UserHostAddress ?? "Unknown";
         }
 
         // Alert classes match the frontend CSS (.alert-box.show.success / .error)
         private void ShowAlert(string message, string type)
         {
             string icon = type == "success" ? "check-circle" : "exclamation-circle";
-            alertBox.InnerHtml = $"<i class='fas fa-{icon}'></i> {message}";
-            alertBox.Attributes["class"] = $"alert-box show {type}";
+            alertBox.InnerHtml = System.Web.HttpUtility.HtmlEncode(message);
+            alertBox.Attributes["class"] = type=="success"?"alert alert-success":"alert alert-danger";
         }
 
         private void ClearAlert()

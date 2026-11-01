@@ -1,0 +1,29 @@
+/* Shared account and public support presentation. guardian.css loads the foundation. */
+.gh-auth{background:var(--gh-paper)}
+.gh-auth-layout{display:grid;grid-template-columns:minmax(0,1.07fr) minmax(0,1fr);min-height:100vh}
+.gh-auth-intro{background:#e8e3d7;display:flex;flex-direction:column;position:relative;overflow:hidden;padding:45px 58px 30px}
+.gh-auth-intro .gh-brand{padding:0;color:var(--gh-ink)}.gh-auth-intro .gh-brand-mark{color:var(--gh-indigo)}
+.gh-auth-message{margin:auto 0;position:relative;z-index:1;max-width:580px;padding:60px 0 42px}
+.gh-auth-message h1{font-size:clamp(46px,5.5vw,82px);line-height:1.02;letter-spacing:-.07em;font-weight:500;margin:23px 0 28px}.gh-auth-message h1 em{font-family:var(--gh-display);font-weight:400;color:var(--gh-indigo)}
+.gh-auth-message>p:not(.gh-eyebrow){font-size:16px;line-height:1.8;color:#5f6655;max-width:430px}
+.gh-auth-audiences{display:flex;gap:24px;margin-top:33px;border-top:1px solid #c2c6b5;padding-top:23px}
+.gh-auth-audiences>div{flex:1;position:relative;padding-left:26px}.gh-auth-audiences span{position:absolute;left:0;top:-2px;font-size:20px;color:var(--gh-indigo)}.gh-auth-audiences strong{font-size:12px;color:#4d5741}.gh-auth-audiences p{font-size:12px;line-height:1.7;color:#69745a;margin:7px 0 0}
+.gh-auth-visual{height:230px;margin:0 -58px 25px;overflow:hidden;background:#c2b29c}.gh-auth-visual img{width:100%;height:100%;object-fit:cover;object-position:center 44%}
+.gh-auth-footnote{font-size:10px;letter-spacing:.1em;color:#626b54;margin:0}
+.gh-auth-panel{display:grid;place-items:center;padding:60px 50px;background:var(--gh-paper)}
+.gh-auth-card{max-width:405px;width:100%;animation:gh-enter .4s var(--gh-ease) both}
+.gh-auth-card h2{font-size:39px;font-weight:550;letter-spacing:-.055em;margin:13px 0}.gh-auth-subtitle{color:#6d7560;font-size:14px;margin-bottom:34px}
+.gh-auth-field{margin-bottom:24px}.gh-auth-field label{font-size:13px}
+.gh-auth-options{display:flex;justify-content:space-between;align-items:center;gap:15px;font-size:12px;margin:23px 0 28px}.gh-auth-options>span{display:flex;align-items:center;gap:8px}.gh-auth-options label{display:inline;width:auto;margin:0;font-size:12px;font-weight:400}.gh-auth-options input{margin:0}
+.gh-auth-submit{width:100%;min-height:49px!important}
+.gh-auth-options>label{margin-right:auto}.gh-auth-options>a{margin-left:auto}.gh-auth-options{justify-content:flex-start;gap:8px}
+.gh-auth-note{margin:30px 0 25px;font-size:12px;line-height:1.8;color:#6b725f;text-align:center}
+.gh-auth-security{border-top:1px solid #d7dbcc;padding-top:22px;font-size:11px;text-align:center;color:#6c765e}
+.gh-auth .alert:empty{display:none}
+.gh-auth .error{padding:15px 18px;margin-bottom:24px;background:#fff0f0;color:#983347;border:1px solid #ebbec6;border-left-width:4px;border-radius:6px;font-size:13px}
+.gh-auth-simple{min-height:100vh;display:grid;place-items:center;padding:45px 24px;background:linear-gradient(120deg,#eeebe1 0 50%,#f5f3ed 50%)}
+.gh-auth-simple .gh-auth-card{max-width:540px;background:#fffefa;border:1px solid #dcddcf;border-radius:12px;padding:42px;box-shadow:0 15px 60px #3545260c;border-top:4px solid var(--gh-indigo)}
+.gh-auth-simple .form-grid{grid-template-columns:1fr}.gh-auth-simple h1{font-size:34px}.gh-auth-simple p{color:#657057;font-size:14px}.gh-auth-simple form{margin:28px 0}.gh-auth-simple .alert:empty{display:none}
+.gh-auth-simple details{padding:18px}.gh-auth-simple details p{margin:14px 0 0}.gh-auth-simple summary{font-weight:650;color:#514a9f;cursor:pointer;font-size:14px}
+@media(max-width:1100px){.gh-auth-intro{padding:35px 38px 28px}.gh-auth-visual{margin-inline:-38px;height:220px}.gh-auth-panel{padding:40px}.gh-auth-message{padding-block:48px 36px}.gh-auth-message h1{font-size:57px}}
+@media(max-width:700px){.gh-auth-layout{grid-template-columns:1fr}.gh-auth-intro{padding:25px 26px;background:#e8e3d7;border-bottom:1px solid #d5d4c6}.gh-auth-intro .gh-brand{font-size:22px}.gh-auth-intro .gh-brand-sub{font-size:21px}.gh-auth-message,.gh-auth-footnote,.gh-auth-visual{display:none}.gh-auth-panel{padding:38px 26px}.gh-auth-card h2{font-size:34px}.gh-auth-simple{padding:23px 16px}.gh-auth-simple .gh-auth-card{padding:29px 24px}.gh-auth-simple h1{font-size:30px}}

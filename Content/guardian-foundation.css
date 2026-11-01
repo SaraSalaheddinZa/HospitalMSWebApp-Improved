@@ -1,0 +1,12 @@
+/* HUMAN / CONNECTED — shared public, clinical and patient design primitives. */
+@font-face{font-family:Manrope;src:url('../fonts/Manrope.ttf') format('truetype');font-weight:200 800;font-display:swap}
+:root{--gh-font:'Manrope','Segoe UI',sans-serif;--gh-display:Georgia,'Times New Roman',serif;--gh-ink:#262825;--gh-muted:#676963;--gh-paper:#f5f3ed;--gh-surface:#fffefa;--gh-line:#dedfd5;--gh-indigo:#4846cd;--gh-indigo-soft:#efedff;--gh-apricot:#f4c8ac;--gh-apricot-soft:#fbefe5;--gh-radius:12px;--gh-primary:var(--gh-indigo);--gh-primary-soft:var(--gh-indigo-soft);--gh-bg:var(--gh-paper);--gh-text:var(--gh-ink);--gh-border:var(--gh-line);--gh-success:#326349;--gh-warning:#825318;--gh-danger:#a42d40;--gh-ease:cubic-bezier(.22,.7,.24,1)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:var(--gh-font);color:var(--gh-ink);background:var(--gh-paper);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit}
+a,button,input,select,textarea,summary{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--gh-indigo)!important;outline-offset:4px}
+button,a,summary{touch-action:manipulation}
+@keyframes gh-enter{from{opacity:.25;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes gh-busy{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

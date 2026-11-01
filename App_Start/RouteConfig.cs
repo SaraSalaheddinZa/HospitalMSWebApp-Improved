@@ -11,7 +11,9 @@ namespace HospitalMSWebApp
         public static void RegisterRoutes(RouteCollection routes)
         {
             var settings = new FriendlyUrlSettings();
-            settings.AutoRedirectMode = RedirectMode.Permanent;
+            // Existing Web Forms links and forms use .aspx URLs. Redirecting them to
+            // friendly URLs turns POST requests into GETs and broke reset/logout flows.
+            settings.AutoRedirectMode = RedirectMode.Off;
             routes.EnableFriendlyUrls(settings);
         }
     }

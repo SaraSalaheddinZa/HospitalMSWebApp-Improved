@@ -11,12 +11,37 @@ namespace HospitalMSWebApp.Views
         private const int MaxSessionAttempts = 5;
         private const int LockoutMinutes = 15;
 
+        // Presentation only. Authenticate still checks the selected role against the account.
+        protected string EntryMode
+        {
+            get
+            {
+                if (roleCb.SelectedValue == "Patient") return "patient";
+                if (!string.IsNullOrEmpty(roleCb.SelectedValue)) return "staff";
+                return Request.Form["entryMode"] == "staff" || Request.QueryString["access"] == "staff" ? "staff" : "patient";
+            }
+        }
+
+        protected override void OnInit(EventArgs e)
+        {
+            // Persist the anonymous session cookie before binding ViewState to its ID.
+            // Merely reading SessionID on a fresh GET does not persist an ASP.NET session.
+            if (Session["PublicLoginInitialized"] == null) Session["PublicLoginInitialized"] = true;
+            ViewStateUserKey = Session.SessionID;
+            base.OnInit(e);
+        }
+
         protected void Page_Load(object sender, EventArgs e)
         {
             ExpireLegacyPasswordCookie();
             if (!IsPostBack)
             {
                 LoadRememberedIdentity();
+                // Entry-point preference only; authentication still validates the selected role against the account.
+                var requestedRole=Request.QueryString["role"];
+                if(!string.IsNullOrEmpty(requestedRole)&&roleCb.Items.FindByValue(requestedRole)!=null)roleCb.SelectedValue=requestedRole;
+                else if(Request.QueryString["access"]=="staff")roleCb.SelectedIndex=0;
+                else if(string.IsNullOrEmpty(roleCb.SelectedValue))roleCb.SelectedValue="Patient";
                 CheckSessionLockout();
             }
         }
@@ -158,14 +183,23 @@ namespace HospitalMSWebApp.Views
         private string SafeDestination(string role)
         {
             var returnUrl = Request.QueryString["returnUrl"];
-            if (!string.IsNullOrEmpty(returnUrl) && returnUrl.StartsWith("/") && !returnUrl.StartsWith("//")) return returnUrl;
-            return "Portal.aspx?module=" + (role == "Patient" ? "patient" : "dashboard");
+            if (!string.IsNullOrEmpty(returnUrl) && returnUrl.StartsWith("/") && !returnUrl.StartsWith("//") && !returnUrl.Contains("\\")) return returnUrl;
+            switch(role) {
+                case "Doctor": return "Doctors/ClinicalWorkspace.aspx";
+                case "Nurse": return "Nurse/Workspace.aspx";
+                case "Pharmacist": return "Pharmacist/Workspace.aspx";
+                case "Receptionist": return "Receptionist/Workspace.aspx";
+                case "Laboratorian": return "Laboratorian/Workspace.aspx";
+                case "Admin": return "Admin/Workspace.aspx";
+                case "Patient": return "Patient/Workspace.aspx";
+                default: return "Portal.aspx";
+            }
         }
 
         private void ShowError(string message)
         {
             ErrMsg.InnerText = message;
-            ErrMsg.Attributes["class"] = "error";
+            ErrMsg.Attributes["class"] = "feedback error";
         }
 
         public override void VerifyRenderingInServerForm(System.Web.UI.Control control) { }

@@ -7,7 +7,7 @@ using System.Web.UI;
 
 namespace HospitalMSWebApp.Views
 {
-    public partial class ContactAdmin : System.Web.UI.Page
+    public partial class ContactAdmin : HospitalMSWebApp.Infrastructure.PublicRequestPage
     {
         Models.Functions conn;
 
@@ -23,6 +23,7 @@ namespace HospitalMSWebApp.Views
 
         protected void submitBtn_Click(object sender, EventArgs e)
         {
+            if(!ConsumeSubmission()){ShowAlert("This form expired or was already submitted. Refresh and try again.", "error");return;}
             try
             {
                 if (!ValidateInputs())
@@ -39,7 +40,7 @@ namespace HospitalMSWebApp.Views
                 {
                     SendAdminNotification(name, email, requestType, message);
 
-                    ShowAlert("Your message has been sent successfully! We'll get back to you within 24 hours.", "success");
+                    ShowAlert("Your request has been recorded. Contact reception if you need immediate account assistance.", "success");
                     ClearForm();
                 }
                 else
@@ -128,6 +129,10 @@ namespace HospitalMSWebApp.Views
             try
             {
                 string subject = $"Guardian Health - New Contact Request: {requestType}";
+                name=System.Web.HttpUtility.HtmlEncode(name);
+                message=System.Web.HttpUtility.HtmlEncode(message);
+                email=System.Web.HttpUtility.HtmlEncode(email);
+                requestType=System.Web.HttpUtility.HtmlEncode(requestType);
                 string body = $@"
                     <html>
                     <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
@@ -154,16 +159,12 @@ namespace HospitalMSWebApp.Views
                                 <td style='padding: 10px; border: 1px solid #ddd;'>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</td>
                             </tr>
                         </table>
-                        <p style='margin-top: 20px;'>
-                            <a href='{Request.Url.Scheme}://{Request.Url.Authority}/Views/Admin/ContactRequests.aspx' 
-                               style='background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>
-                               View in Admin Panel
-                            </a>
-                        </p>
+                        <p>Sign in through your usual Guardian Health staff address to review this request.</p>
                     </body>
                     </html>";
 
-                string adminEmail = System.Configuration.ConfigurationManager.AppSettings["AdminEmail"] ?? "admin@guardianhealth.com";
+                string adminEmail = System.Configuration.ConfigurationManager.AppSettings["AdminEmail"];
+                if(string.IsNullOrWhiteSpace(adminEmail))return;
 
                 SendEmail(adminEmail, subject, body);
             }
@@ -213,48 +214,20 @@ namespace HospitalMSWebApp.Views
 
         private DataTable ExecuteParameterizedQuery(string query, params SqlParameter[] parameters)
         {
-            DataTable dt = new DataTable();
-            string connString = Models.Functions.ConnectionString;
-
-            if (string.IsNullOrEmpty(connString))
-            {
-                // Fallback to Functions class
-                string modifiedQuery = query;
-                foreach (var param in parameters)
-                {
-                    modifiedQuery = modifiedQuery.Replace(param.ParameterName, $"'{param.Value}'");
-                }
-                return conn.GetDatas(modifiedQuery);
-            }
-
-            using (SqlConnection connection = new SqlConnection(connString))
-            {
-                using (SqlCommand command = new SqlCommand(query, connection))
-                {
-                    command.Parameters.AddRange(parameters);
-                    SqlDataAdapter adapter = new SqlDataAdapter(command);
-                    adapter.Fill(dt);
-                }
-            }
-
-            return dt;
+            return new Models.Functions().GetDatas(query,parameters);
         }
 
         private string GetClientIP()
         {
-            string ip = Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
-            if (string.IsNullOrEmpty(ip))
-            {
-                ip = Request.ServerVariables["REMOTE_ADDR"];
-            }
-            return ip ?? "Unknown";
+            // A forwarded header is not trustworthy without a configured proxy boundary.
+            return Request.UserHostAddress ?? "Unknown";
         }
 
         private void ShowAlert(string message, string type)
         {
             string icon = type == "success" ? "check-circle" : "exclamation-circle";
-            alertBox.InnerHtml = $"<i class='fas fa-{icon}'></i> {message}";
-            alertBox.Attributes["class"] = $"alert alert-{type} show";
+            alertBox.InnerHtml = System.Web.HttpUtility.HtmlEncode(message);
+            alertBox.Attributes["class"] = type=="success"?"alert alert-success":"alert alert-danger";
         }
 
         private void ClearForm()

@@ -3,15 +3,21 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Security.Cryptography;
 using System.Text;
+using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
 namespace HospitalMSWebApp.Views.Admin
 {
-    public partial class Doctors : System.Web.UI.Page
+    public partial class Doctors : HospitalMSWebApp.Infrastructure.LegacyDirectoryPage
     {
+        protected override string DirectoryRole { get { return "Admin"; } }
         Models.Functions conn;
-        private int selectedDoctorId = 0;
+        private int selectedDoctorId
+        {
+            get { return ViewState["selectedDoctorId"] == null ? 0 : (int)ViewState["selectedDoctorId"]; }
+            set { ViewState["selectedDoctorId"] = value; }
+        }
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -44,7 +50,7 @@ namespace HospitalMSWebApp.Views.Admin
             }
             catch (Exception ex)
             {
-                ShowAlert("Error loading doctors: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error loading doctors. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -71,166 +77,36 @@ namespace HospitalMSWebApp.Views.Admin
 
         #region CRUD Operations
 
-        protected void addBtn_Click(object sender, EventArgs e)
+        protected void addBtn_Click(object sender, EventArgs e) { SaveDirectoryRecord(false); }
+        protected void editBtn_Click(object sender, EventArgs e) { SaveDirectoryRecord(true); }
+        private void SaveDirectoryRecord(bool update)
         {
+            if (update && selectedDoctorId == 0) { ShowAlert("Select a staff member to update.", "error"); return; }
+            if (!ValidateInputs(update)) return;
+            DateTime parsed;DateTime? dob=DateTime.TryParseExact(DOBTb.Value,"yyyy-MM-dd",System.Globalization.CultureInfo.InvariantCulture,System.Globalization.DateTimeStyles.None,out parsed)?(DateTime?)parsed:null;
+            int years;int? experience=int.TryParse(DocExpTb.Value,out years)?(int?)years:null;
             try
             {
-                if (!ValidateInputs())
-                    return;
-
-                string doctorName = DocNameTb.Value.Trim();
-                string doctorPhone = DocPhoneTb.Value.Trim();
-                string doctorExp = DocExpTb.Value.Trim();
-                string doctorSpec = SpecialisationTb.Text.Trim();
-                string doctorGen = GenderCb.SelectedValue;
-                string doctorAdd = AddressTb.Text.Trim();
-                string doctorDOB = DOBTb.Value;
-                string doctorPassword = HashPassword(PasswordTb.Value);
-                string doctorEmail = emailTb.Text.Trim().ToLower();
-                string doctorStatus = StatusCb.SelectedValue;
-
-                if (EmailExists(doctorEmail))
-                {
-                    ShowAlert("A doctor with this email already exists.", "error");
-                    return;
-                }
-
-                string query = @"INSERT INTO doctorTbl (doctorName, doctorPhone, doctorExp, doctorSpec, doctorGender, doctorAdd, doctorDOB, doctorPassword, doctorEmail, doctorStatus) 
-                                 VALUES (@Name, @Phone, @Exp, @Spec, @Gender, @Add, @DOB, @Password, @Email, @Status)";
-
-                ExecuteParameterizedQuery(query,
-                    new SqlParameter("@Name", doctorName),
-                    new SqlParameter("@Phone", doctorPhone),
-                    new SqlParameter("@Exp", Convert.ToInt32(doctorExp)),
-                    new SqlParameter("@Spec", doctorSpec),
-                    new SqlParameter("@Gender", doctorGen),
-                    new SqlParameter("@Add", doctorAdd),
-                    new SqlParameter("@DOB", doctorDOB),
-                    new SqlParameter("@Password", doctorPassword),
-                    new SqlParameter("@Email", doctorEmail),
-                    new SqlParameter("@Status", doctorStatus)
-                );
-
-                LoadDoctors();
-                LoadStatistics();
-                ClearForm();
-                ShowAlert("Doctor added successfully!", "success");
-            }
-            catch (Exception ex)
-            {
-                ShowAlert("Error adding doctor: " + ex.Message, "error");
-            }
-        }
-
-        protected void editBtn_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (selectedDoctorId == 0)
-                {
-                    ShowAlert("Please select a doctor to update.", "error");
-                    return;
-                }
-
-                if (!ValidateInputs(true))
-                    return;
-
-                string doctorName = DocNameTb.Value.Trim();
-                string doctorPhone = DocPhoneTb.Value.Trim();
-                string doctorExp = DocExpTb.Value.Trim();
-                string doctorSpec = SpecialisationTb.Text.Trim();
-                string doctorGen = GenderCb.SelectedValue;
-                string doctorAdd = AddressTb.Text.Trim();
-                string doctorDOB = DOBTb.Value;
-                string doctorEmail = emailTb.Text.Trim().ToLower();
-                string doctorStatus = StatusCb.SelectedValue;
-
-                if (EmailExists(doctorEmail, selectedDoctorId))
-                {
-                    ShowAlert("Another doctor with this email already exists.", "error");
-                    return;
-                }
-
-                string query = @"UPDATE doctorTbl SET 
-                    doctorName = @Name, 
-                    doctorPhone = @Phone, 
-                    doctorExp = @Exp, 
-                    doctorSpec = @Spec, 
-                    doctorGender = @Gender, 
-                    doctorAdd = @Add, 
-                    doctorDOB = @DOB, 
-                    doctorEmail = @Email, 
-                    doctorStatus = @Status";
-
-                if (!string.IsNullOrEmpty(PasswordTb.Value))
-                {
-                    query += ", doctorPassword = @Password";
-                }
-
-                query += " WHERE doctorID = @ID";
-
-                var parameters = new System.Collections.Generic.List<SqlParameter>
-                {
-                    new SqlParameter("@Name", doctorName),
-                    new SqlParameter("@Phone", doctorPhone),
-                    new SqlParameter("@Exp", Convert.ToInt32(doctorExp)),
-                    new SqlParameter("@Spec", doctorSpec),
-                    new SqlParameter("@Gender", doctorGen),
-                    new SqlParameter("@Add", doctorAdd),
-                    new SqlParameter("@DOB", doctorDOB),
-                    new SqlParameter("@Email", doctorEmail),
-                    new SqlParameter("@Status", doctorStatus),
-                    new SqlParameter("@ID", selectedDoctorId)
+                var entry = new HospitalMSWebApp.Services.StaffDirectoryEntry {
+                    Role="Doctor",Id=update?(int?)selectedDoctorId:null,Name=DocNameTb.Value,Email=emailTb.Text,Phone=DocPhoneTb.Value,Address=AddressTb.Text,Gender=GenderCb.SelectedValue,Status=StatusCb.SelectedValue,Password=PasswordTb.Value,Specialty=SpecialisationTb.Text,BirthDate=dob,Experience=experience,ConfirmEmailChange=Request.Form["confirmLoginEmail"]=="on",ConfirmPasswordChange=Request.Form["confirmPasswordChange"]=="on"
                 };
-
-                if (!string.IsNullOrEmpty(PasswordTb.Value))
-                {
-                    parameters.Add(new SqlParameter("@Password", HashPassword(PasswordTb.Value)));
-                }
-
-                ExecuteParameterizedQuery(query, parameters.ToArray());
-
-                LoadDoctors();
-                LoadStatistics();
-                ClearForm();
-                ShowAlert("Doctor updated successfully!", "success");
+                new HospitalMSWebApp.Services.HospitalWorkflowService().SaveStaffDirectoryEntry(entry,CurrentUser.UserId);
+                LoadDoctors(); LoadStatistics(); ClearForm();
+                ShowAlert("Staff profile and sign-in access saved.", "success");
             }
-            catch (Exception ex)
-            {
-                ShowAlert("Error updating doctor: " + ex.Message, "error");
-            }
+            catch (ArgumentException ex) { ShowAlert(ex.Message, "error"); }
+            catch (Exception ex) { ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex,"The staff profile could not be saved. Check the email and selected record, then retry."),"error"); }
         }
-
         protected void deleteBtn_Click(object sender, EventArgs e)
         {
+            if (selectedDoctorId == 0) { ShowAlert("Select a staff member to deactivate.", "error"); return; }
             try
             {
-                if (selectedDoctorId == 0)
-                {
-                    ShowAlert("Please select a doctor to delete.", "error");
-                    return;
-                }
-
-                // Check if doctor has associated records
-                if (HasAssociatedRecords(selectedDoctorId))
-                {
-                    ShowAlert("Cannot delete doctor with associated appointments or prescriptions. Consider setting status to Inactive instead.", "error");
-                    return;
-                }
-
-                string query = "DELETE FROM doctorTbl WHERE doctorID = @ID";
-                ExecuteParameterizedQuery(query, new SqlParameter("@ID", selectedDoctorId));
-
-                LoadDoctors();
-                LoadStatistics();
-                ClearForm();
-                selectedDoctorId = 0;
-                ShowAlert("Doctor deleted successfully!", "success");
+                new HospitalMSWebApp.Services.HospitalWorkflowService().SetDirectoryStaffActive("Doctor",selectedDoctorId,false,CurrentUser.UserId);
+                LoadDoctors(); LoadStatistics(); ClearForm();
+                ShowAlert("Staff access deactivated. Historical records were retained.","success");
             }
-            catch (Exception ex)
-            {
-                ShowAlert("Error deleting doctor: " + ex.Message, "error");
-            }
+            catch (Exception ex) { ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex,"Staff access could not be changed. Refresh the directory and retry."),"error"); }
         }
 
         protected void clearBtn_Click(object sender, EventArgs e)
@@ -266,7 +142,7 @@ namespace HospitalMSWebApp.Views.Admin
             }
             catch (Exception ex)
             {
-                ShowAlert("Error loading doctor details: " + ex.Message, "error");
+                ShowAlert(HospitalMSWebApp.Infrastructure.ApplicationErrors.Report(ex, "Error loading doctor details. Please review the form and try again; contact your administrator if the problem continues."), "error");
             }
         }
 
@@ -372,21 +248,14 @@ namespace HospitalMSWebApp.Views.Admin
             DataTable dt = new DataTable();
             string connString = Models.Functions.ConnectionString;
 
-            if (string.IsNullOrEmpty(connString))
-            {
-                string modifiedQuery = query;
-                foreach (var param in parameters)
-                {
-                    modifiedQuery = modifiedQuery.Replace(param.ParameterName, $"'{param.Value}'");
-                }
-                return conn.GetDatas(modifiedQuery);
-            }
+            if (string.IsNullOrEmpty(connString)) throw new InvalidOperationException("Database configuration is unavailable.");
 
             using (SqlConnection connection = new SqlConnection(connString))
             {
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
                     command.Parameters.AddRange(parameters);
+                    Models.Functions.OpenConfiguredConnection(connection);
                     SqlDataAdapter adapter = new SqlDataAdapter(command);
                     adapter.Fill(dt);
                 }
@@ -398,7 +267,7 @@ namespace HospitalMSWebApp.Views.Admin
         private void ShowAlert(string message, string type)
         {
             string icon = type == "success" ? "check-circle" : type == "error" ? "exclamation-circle" : "info-circle";
-            alertBox.InnerHtml = $"<i class='fas fa-{icon}'></i> {message}";
+            alertBox.InnerHtml = $"<i class='fas fa-{icon}'></i> {HttpUtility.HtmlEncode(message)}";
             alertBox.Attributes["class"] = $"alert alert-{type} show";
         }
 
